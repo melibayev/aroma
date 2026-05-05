@@ -1662,23 +1662,34 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
       else window.addEventListener('load', resolve, { once:true });
     }).then(() => { signals.window = 1; updateProgress(); });
 
-    // images: tracks per-image progress
-    const imgs = Array.from(document.images);
-    const totalImgs = Math.max(1, imgs.length);
-    let loadedImgs = 0;
-    imgs.forEach(img => {
-      const finish = () => {
-        loadedImgs++;
-        signals.images = loadedImgs / totalImgs;
-        updateProgress();
-      };
-      if (img.complete && img.naturalWidth > 0) finish();
+    // Collect every image source we need ready: <img> tags + [data-img] (archive thumbs)
+    const inDomImgs = Array.from(document.images);
+    const dataImgUrls = Array.from(document.querySelectorAll('[data-img]'))
+      .map(el => el.getAttribute('data-img'))
+      .filter(Boolean);
+
+    const totalAssets = Math.max(1, inDomImgs.length + dataImgUrls.length);
+    let loadedAssets = 0;
+    const bumpAsset = () => {
+      loadedAssets++;
+      signals.images = Math.min(1, loadedAssets / totalAssets);
+      updateProgress();
+    };
+
+    inDomImgs.forEach(img => {
+      if (img.complete && img.naturalWidth > 0) bumpAsset();
       else {
-        img.addEventListener('load',  finish, { once:true });
-        img.addEventListener('error', finish, { once:true });
+        img.addEventListener('load',  bumpAsset, { once:true });
+        img.addEventListener('error', bumpAsset, { once:true });
       }
     });
-    if (imgs.length === 0) { signals.images = 1; updateProgress(); }
+    dataImgUrls.forEach(src => {
+      const img = new Image();
+      img.onload  = bumpAsset;
+      img.onerror = bumpAsset;
+      img.src = src;
+    });
+    if (totalAssets === 0) { signals.images = 1; updateProgress(); }
 
     heroSafe.then(()   => { signals.hero   = 1; updateProgress(); });
     ritualSafe.then(() => { signals.ritual = 1; updateProgress(); });
@@ -1732,7 +1743,6 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     // Default fallback if manifest fetch fails (e.g. opened via file://)
     const FALLBACK = [
       'videos/IMG_0328.MP4',
-      'videos/IMG_0329.MP4',
       'videos/IMG_0330.MP4',
       'videos/IMG_0331.MP4',
       'videos/cmhAOXvAp9WpagodoY9g+KMTWNYzzDNE.mp4',
@@ -1745,13 +1755,21 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
       // Set src only when we have a chosen one — keeps initial page light.
       v.src = encodeURI(src);
       v.preload = 'auto';
-      const onReady = () => {
+      let resolved = false;
+      const ready = () => {
+        if (resolved) return; resolved = true;
         v.classList.add('is-on');
         v.play().catch(() => {});
-        v.removeEventListener('canplay', onReady);
+        v.removeEventListener('canplaythrough', ready);
+        v.removeEventListener('canplay', ready);
         if (window.__resolveHeroReady) window.__resolveHeroReady();
       };
-      v.addEventListener('canplay', onReady);
+      // Prefer canplaythrough (fully buffered) but accept canplay as backup
+      v.addEventListener('canplaythrough', ready);
+      v.addEventListener('canplay', () => {
+        // give it a beat to upgrade to canplaythrough; then accept canplay
+        setTimeout(ready, 1500);
+      });
       v.addEventListener('error', () => {
         v.classList.remove('is-on');
         if (window.__resolveHeroReady) window.__resolveHeroReady();
