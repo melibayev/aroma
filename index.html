@@ -1583,38 +1583,122 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   }
 
   /* ====================================================
-     LOADER
+     LOADER — real asset readiness.
+     Waits for: window.load (HTML/CSS/<img> in DOM), all family
+     images, the chosen hero video's `canplay`, and the first
+     ritual frame. Counter reflects real progress.
      ==================================================== */
   const loader = document.getElementById('loader');
   const lc = document.getElementById('loaderCount');
   const lb = document.getElementById('loaderBar');
 
+  // Promises that other modules resolve when their critical asset is ready.
+  // They're created here so the modules can attach listeners synchronously.
+  let __resolveHero, __resolveRitual;
+  window.__heroReady   = new Promise(r => { __resolveHero   = r; });
+  window.__ritualReady = new Promise(r => { __resolveRitual = r; });
+  window.__resolveHeroReady   = () => __resolveHero();
+  window.__resolveRitualReady = () => __resolveRitual();
+
+  // Safety: never get stuck if a resource hangs (slow CDN, tab throttled, etc.)
+  const HARD_TIMEOUT = 12000;
+  const heroSafe   = Promise.race([window.__heroReady,   new Promise(r => setTimeout(r, HARD_TIMEOUT))]);
+  const ritualSafe = Promise.race([window.__ritualReady, new Promise(r => setTimeout(r, HARD_TIMEOUT))]);
+
+  // Aggregated progress 0–1 across the four readiness signals.
+  const signals = { window: 0, images: 0, hero: 0, ritual: 0 };
+  function updateProgress(){
+    const v = (signals.window * 0.20)
+            + (signals.images * 0.40)
+            + (signals.hero   * 0.25)
+            + (signals.ritual * 0.15);
+    const pct = Math.max(displayedPct, Math.round(v * 100));
+    targetPct = pct;
+  }
+
+  // Smooth counter — lerps displayed % toward target so it never jumps.
+  let targetPct = 0, displayedPct = 0, counterRaf = null;
+  function tickCounter(){
+    const d = targetPct - displayedPct;
+    if (Math.abs(d) < 0.5) {
+      displayedPct = targetPct;
+    } else {
+      displayedPct += d * 0.12;
+    }
+    const shown = Math.min(100, Math.round(displayedPct));
+    lc.textContent = String(shown).padStart(2, '0');
+    lb.style.inset = `0 ${100 - shown}% 0 0`;
+    if (displayedPct < targetPct - 0.4 || targetPct < 100) {
+      counterRaf = requestAnimationFrame(tickCounter);
+    } else if (shown < 100) {
+      counterRaf = requestAnimationFrame(tickCounter);
+    }
+  }
+  tickCounter();
+
   function startApp(){
-    document.body.classList.remove('is-locked');
-    loader.classList.add('is-out');
-    lenis.start();
-    setTimeout(() => loader.style.display = 'none', 1400);
-    runHeroIntro();
-    ScrollTrigger.refresh();
+    // ensure counter shows 100 before fading
+    targetPct = 100; displayedPct = 100;
+    lc.textContent = '100'; lb.style.inset = '0 0 0 0';
+
+    setTimeout(() => {
+      document.body.classList.remove('is-locked');
+      loader.classList.add('is-out');
+      lenis.start();
+      setTimeout(() => loader.style.display = 'none', 1400);
+      runHeroIntro();
+      ScrollTrigger.refresh();
+    }, 220);
   }
 
   if (reduceMotion){
+    targetPct = 100; displayedPct = 100;
     lc.textContent = '100'; lb.style.inset = '0';
     setTimeout(startApp, 200);
   } else {
-    let pct = 0;
-    const total = 1700; // ms
-    const start = performance.now();
-    const step = now => {
-      const t = Math.min(1, (now - start) / total);
-      // ease-out-quart
-      pct = Math.round((1 - Math.pow(1 - t, 4)) * 100);
-      lc.textContent = String(pct).padStart(2, '0');
-      lb.style.inset = `0 ${100 - pct}% 0 0`;
-      if (t < 1) requestAnimationFrame(step);
-      else setTimeout(startApp, 280);
-    };
-    requestAnimationFrame(step);
+    // window.load (CSS, fonts, in-DOM images decoded)
+    const winLoad = new Promise(resolve => {
+      if (document.readyState === 'complete') resolve();
+      else window.addEventListener('load', resolve, { once:true });
+    }).then(() => { signals.window = 1; updateProgress(); });
+
+    // images: tracks per-image progress
+    const imgs = Array.from(document.images);
+    const totalImgs = Math.max(1, imgs.length);
+    let loadedImgs = 0;
+    imgs.forEach(img => {
+      const finish = () => {
+        loadedImgs++;
+        signals.images = loadedImgs / totalImgs;
+        updateProgress();
+      };
+      if (img.complete && img.naturalWidth > 0) finish();
+      else {
+        img.addEventListener('load',  finish, { once:true });
+        img.addEventListener('error', finish, { once:true });
+      }
+    });
+    if (imgs.length === 0) { signals.images = 1; updateProgress(); }
+
+    heroSafe.then(()   => { signals.hero   = 1; updateProgress(); });
+    ritualSafe.then(() => { signals.ritual = 1; updateProgress(); });
+
+    // Fonts — nudge progress when fonts settle (folded into window).
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { signals.window = Math.max(signals.window, 0.6); updateProgress(); });
+    }
+
+    // When everything is in: start the app
+    Promise.all([winLoad, heroSafe, ritualSafe]).then(() => {
+      // give the counter a moment to catch up to 100
+      const finish = () => {
+        if (displayedPct >= 99) startApp();
+        else requestAnimationFrame(finish);
+      };
+      targetPct = 100;
+      requestAnimationFrame(tickCounter);
+      requestAnimationFrame(finish);
+    });
   }
 
   /* ====================================================
@@ -1665,9 +1749,13 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
         v.classList.add('is-on');
         v.play().catch(() => {});
         v.removeEventListener('canplay', onReady);
+        if (window.__resolveHeroReady) window.__resolveHeroReady();
       };
       v.addEventListener('canplay', onReady);
-      v.addEventListener('error', () => v.classList.remove('is-on'), { once:true });
+      v.addEventListener('error', () => {
+        v.classList.remove('is-on');
+        if (window.__resolveHeroReady) window.__resolveHeroReady();
+      }, { once:true });
       v.load();
     }
 
@@ -1988,6 +2076,7 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
       firstReady = true;
       sizeCanvas();
       renderAt(0);
+      if (window.__resolveRitualReady) window.__resolveRitualReady();
 
       // 2) coarse pass — every 8th frame in parallel
       const coarse = [];
