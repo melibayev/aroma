@@ -641,23 +641,7 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   align-items:center;
 }
 @media (max-width:900px){
-  .ritual{ padding: clamp(80px, 12vh, 120px) var(--pad-x) }
-  .ritual__sticky{
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 32px;
-    height: auto;
-  }
-  .ritual__canvas{
-    aspect-ratio: 1/1;
-    max-height: none;
-    width: 100%;
-  }
-  .ritual__title{ text-align:left; font-size: clamp(32px, 9vw, 56px) }
-  .ritual__title small{ margin-top:14px }
-  .ritual__caption{ display:flex; flex-wrap:wrap; gap: 8px 14px }
-  .ritual__caption b{ width:100%; margin-bottom:0 }
-  .ritual__caption .step{ margin-top:0 }
+  .ritual{ display:none !important }
 }
 .ritual__caption{
   font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
@@ -2080,6 +2064,12 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     const canvas = document.getElementById('ritualCanvas');
     const steps  = document.querySelectorAll('#ritualCaption .step');
     if (!canvas) return;
+    // Ritual is hidden on mobile — skip loading 300 frames + ScrollTriggers.
+    const isTouchEarly = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+    if (isTouchEarly){
+      if (window.__resolveRitualReady) window.__resolveRitualReady();
+      return;
+    }
     const ctx = canvas.getContext('2d', { alpha: true });
 
     const TOTAL = 300;
