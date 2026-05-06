@@ -1514,22 +1514,44 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   gsap.registerPlugin(ScrollTrigger);
 
   /* ====================================================
-     SMOOTH SCROLL — Lenis (paused during loader)
+     SMOOTH SCROLL — Lenis on desktop only.
+     On touch devices Lenis fights native momentum + sticky
+     positioning, causing scroll-jumps. We use native scroll
+     on mobile and stub the Lenis API so the rest of the code
+     keeps working.
      ==================================================== */
-  const lenis = new Lenis({
-    duration: 1.6,
-    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    lerp: 0.075,
-    smoothWheel: true,
-    wheelMultiplier: 1,
-    touchMultiplier: 1.5,
-  });
-  lenis.stop();
-  function raf(t){ lenis.raf(t); requestAnimationFrame(raf) }
-  requestAnimationFrame(raf);
-  lenis.on('scroll', ScrollTrigger.update);
+  const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+  let lenis;
+  if (isTouch){
+    // Stub: same surface, no smoothing. Native scroll handles everything.
+    lenis = {
+      raf:      () => {},
+      start:    () => {},
+      stop:     () => {},
+      on:       () => {},
+      scrollTo: (target, opts) => {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) return;
+        const top = (el.getBoundingClientRect().top + window.pageYOffset) - (opts && opts.offset || 0);
+        window.scrollTo({ top, behavior: 'smooth' });
+      },
+    };
+  } else {
+    lenis = new Lenis({
+      duration: 1.6,
+      easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.075,
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 1.5,
+    });
+    lenis.stop();
+    function raf(t){ lenis.raf(t); requestAnimationFrame(raf) }
+    requestAnimationFrame(raf);
+    lenis.on('scroll', ScrollTrigger.update);
+  }
 
-  // anchor links → lenis
+  // anchor links → smooth scroll (native on touch, lenis on desktop)
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
       const id = a.getAttribute('href');
@@ -1601,7 +1623,11 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   window.__resolveRitualReady = () => __resolveRitual();
 
   // Safety: never get stuck if a resource hangs (slow CDN, tab throttled, etc.)
-  const HARD_TIMEOUT = 12000;
+  // Mobile browsers often won't preload video bytes without user gesture, so
+  // we use a tighter timeout there and a smaller per-asset budget.
+  const isTouchUA = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+  const HARD_TIMEOUT  = isTouchUA ? 6000 : 10000;
+  const TOTAL_TIMEOUT = isTouchUA ? 9000 : 14000;
   const heroSafe   = Promise.race([window.__heroReady,   new Promise(r => setTimeout(r, HARD_TIMEOUT))]);
   const ritualSafe = Promise.race([window.__ritualReady, new Promise(r => setTimeout(r, HARD_TIMEOUT))]);
 
@@ -1677,17 +1703,24 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     };
 
     inDomImgs.forEach(img => {
-      if (img.complete && img.naturalWidth > 0) bumpAsset();
+      let done = false;
+      const fin = () => { if (done) return; done = true; bumpAsset(); };
+      if (img.complete && img.naturalWidth > 0) fin();
       else {
-        img.addEventListener('load',  bumpAsset, { once:true });
-        img.addEventListener('error', bumpAsset, { once:true });
+        img.addEventListener('load',  fin, { once:true });
+        img.addEventListener('error', fin, { once:true });
+        // per-asset timeout: never wait more than 6s on a single image
+        setTimeout(fin, 6000);
       }
     });
     dataImgUrls.forEach(src => {
       const img = new Image();
-      img.onload  = bumpAsset;
-      img.onerror = bumpAsset;
+      let done = false;
+      const fin = () => { if (done) return; done = true; bumpAsset(); };
+      img.onload  = fin;
+      img.onerror = fin;
       img.src = src;
+      setTimeout(fin, 6000);
     });
     if (totalAssets === 0) { signals.images = 1; updateProgress(); }
 
@@ -1700,16 +1733,23 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     }
 
     // When everything is in: start the app
+    let appStarted = false;
+    const launch = () => { if (appStarted) return; appStarted = true; startApp(); };
+
     Promise.all([winLoad, heroSafe, ritualSafe]).then(() => {
       // give the counter a moment to catch up to 100
       const finish = () => {
-        if (displayedPct >= 99) startApp();
+        if (appStarted) return;
+        if (displayedPct >= 99) launch();
         else requestAnimationFrame(finish);
       };
       targetPct = 100;
       requestAnimationFrame(tickCounter);
       requestAnimationFrame(finish);
     });
+
+    // Absolute total timeout — in any environment the loader must lift.
+    setTimeout(launch, TOTAL_TIMEOUT);
   }
 
   /* ====================================================
@@ -1762,14 +1802,23 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
         v.play().catch(() => {});
         v.removeEventListener('canplaythrough', ready);
         v.removeEventListener('canplay', ready);
+        v.removeEventListener('loadeddata', ready);
+        v.removeEventListener('loadedmetadata', ready);
         if (window.__resolveHeroReady) window.__resolveHeroReady();
       };
-      // Prefer canplaythrough (fully buffered) but accept canplay as backup
-      v.addEventListener('canplaythrough', ready);
-      v.addEventListener('canplay', () => {
-        // give it a beat to upgrade to canplaythrough; then accept canplay
-        setTimeout(ready, 1500);
-      });
+      const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+      if (isTouch){
+        // Mobile browsers won't preload video bytes without user interaction.
+        // Resolve as soon as metadata is available so the loader can lift.
+        v.addEventListener('loadedmetadata', ready);
+        v.addEventListener('loadeddata', ready);
+        v.addEventListener('canplay', ready);
+        // Hard local fallback in case nothing fires (e.g. iOS low-power mode)
+        setTimeout(ready, 3500);
+      } else {
+        v.addEventListener('canplaythrough', ready);
+        v.addEventListener('canplay', () => setTimeout(ready, 1500));
+      }
       v.addEventListener('error', () => {
         v.classList.remove('is-on');
         if (window.__resolveHeroReady) window.__resolveHeroReady();
@@ -2126,13 +2175,15 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     }
     function ensureTick(){ if (!rafActive){ rafActive = true; requestAnimationFrame(tick); } }
 
-    // Pin for 4× viewport — gives each phase generous breathing room
+    // Pin for 4× viewport on desktop. On touch/mobile, use a shorter scrub
+    // without pinning to avoid scroll fights with native momentum + sticky.
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
     const trigger = ScrollTrigger.create({
       trigger: '#ritualShell',
-      start: 'top top',
-      end:   () => '+=' + (window.innerHeight * 4),
-      pin: '.ritual__sticky',
-      pinSpacing: true,
+      start: isTouchDevice ? 'top 80%' : 'top top',
+      end:   isTouchDevice ? 'bottom 20%' : () => '+=' + (window.innerHeight * 4),
+      pin: isTouchDevice ? false : '.ritual__sticky',
+      pinSpacing: !isTouchDevice,
       anticipatePin: 1,
       scrub: true,
       invalidateOnRefresh: true,
