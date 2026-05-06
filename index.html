@@ -2175,39 +2175,69 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     }
     function ensureTick(){ if (!rafActive){ rafActive = true; requestAnimationFrame(tick); } }
 
-    // Pin for 4× viewport on desktop. On touch/mobile, use a shorter scrub
-    // without pinning to avoid scroll fights with native momentum + sticky.
+    // Pin for 4× viewport on desktop. On touch/mobile, skip the scrub entirely:
+    // mobile URL-bar show/hide fires resize, which makes ScrollTrigger
+    // recompute start/end and visually rubber-bands the page. Instead we just
+    // render a hero frame and light up steps via IntersectionObserver.
     const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
-    const trigger = ScrollTrigger.create({
-      trigger: '#ritualShell',
-      start: isTouchDevice ? 'top 80%' : 'top top',
-      end:   isTouchDevice ? 'bottom 20%' : () => '+=' + (window.innerHeight * 4),
-      pin: isTouchDevice ? false : '.ritual__sticky',
-      pinSpacing: !isTouchDevice,
-      anticipatePin: 1,
-      scrub: true,
-      invalidateOnRefresh: true,
-      onUpdate(self){
-        targetP = self.progress;
-        setStep(Math.min(3, Math.floor(targetP * 4)));
-        ensureTick();
-      },
-    });
+    let trigger = null;
 
-    // resize
-    let rT;
-    window.addEventListener('resize', () => {
-      cancelAnimationFrame(rT);
-      rT = requestAnimationFrame(() => {
-        sizeCanvas(); lastDrawn = -1; renderAt(easedP);
-      });
-    });
-
-    if (reduceMotion){
-      trigger.kill();
+    if (isTouchDevice || reduceMotion){
+      // static centerpiece frame; steps animate in on entry
       sizeCanvas();
-      loadFrame(149).then(im => { if (im) drawFrame(im); });
-      setStep(1);
+      const showHero = () => {
+        const im = nearestLoaded(149) || nearestLoaded(0);
+        if (im) drawFrame(im);
+      };
+      // try immediately, then again once preload settles
+      showHero();
+      const heroInt = setInterval(() => {
+        if (frames[149] || frames[0]){ showHero(); clearInterval(heroInt); }
+      }, 250);
+      setTimeout(() => clearInterval(heroInt), 8000);
+
+      // light up the four steps progressively as the section enters view
+      const shell = document.getElementById('ritualShell');
+      if (shell && 'IntersectionObserver' in window){
+        const io = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (e.isIntersecting){
+              steps.forEach((s, i) => {
+                setTimeout(() => s.classList.add('is-on'), i * 220);
+              });
+              io.disconnect();
+            }
+          });
+        }, { threshold: 0.25 });
+        io.observe(shell);
+      } else {
+        setStep(3);
+      }
+    } else {
+      trigger = ScrollTrigger.create({
+        trigger: '#ritualShell',
+        start: 'top top',
+        end:   () => '+=' + (window.innerHeight * 4),
+        pin: '.ritual__sticky',
+        pinSpacing: true,
+        anticipatePin: 1,
+        scrub: true,
+        invalidateOnRefresh: true,
+        onUpdate(self){
+          targetP = self.progress;
+          setStep(Math.min(3, Math.floor(targetP * 4)));
+          ensureTick();
+        },
+      });
+
+      // resize — desktop only; on mobile, URL-bar resize would cause jumps
+      let rT;
+      window.addEventListener('resize', () => {
+        cancelAnimationFrame(rT);
+        rT = requestAnimationFrame(() => {
+          sizeCanvas(); lastDrawn = -1; renderAt(easedP);
+        });
+      });
     }
   })();
 
