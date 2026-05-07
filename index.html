@@ -890,11 +890,18 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   box-shadow: 0 0 0 3px var(--ivory), 0 0 0 4px var(--ink);
 }
 .opt__media{
-  /* Classic padding-top intrinsic-ratio trick for 4:5.
-     aspect-ratio is iOS 15+ only; padding-top works on all Safari versions. */
-  height: 0; padding-top: 125%;  /* 5÷4 × 100 */
-  position:relative; overflow:hidden;
+  /* Pseudo-element trick for intrinsic 4:5 ratio.
+     Putting padding-top on a ::before guarantees the percentage resolves
+     against the parent's width even when .opt__media is a flex/grid item
+     (older iOS Safari mis-resolves padding-% on flex items themselves). */
+  display: block; width: 100%;
+  position: relative; overflow: hidden;
   background: linear-gradient(180deg, #EAE2D2 0%, #D8CDB8 100%);
+}
+.opt__media::before{
+  content: "";
+  display: block;
+  padding-top: 125%; /* 5 / 4 \u00d7 100 */
 }
 .opt__media img{
   /* Avoid inset shorthand (requires iOS 14.5+). Use long-form instead. */
