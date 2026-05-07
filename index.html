@@ -1089,19 +1089,51 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
 }
 .profile.is-on{ opacity:1; transform:none }
 @media (max-width: 980px){
-  .profile{ grid-template-columns: 1fr; gap: var(--rev-gap-md) }
+  .profile{ grid-template-columns: 1fr; gap: var(--rev-gap-sm) }
+}
+
+/* ---------- mobile profile: compact + centered visual ---------- */
+@media (max-width: 640px){
+  .finder__reveal{
+    --rev-gap: 32px;
+    --rev-gap-md: 22px;
+    --rev-gap-sm: 14px;
+  }
+  /* Visual: fixed portrait width, centered — not full-bleed (which is 390×488px) */
+  .profile__visual{
+    width: min(76vw, 300px);
+    /* aspect-ratio: 4/5 is still in effect → height follows width automatically */
+    margin: 0 auto;
+    justify-self: center;
+  }
+  /* Tighter body spacing */
+  .profile__body{ gap: 18px }
+  .profile__name{ font-size: clamp(22px, 6vw, 36px) }
+  .profile__why{ font-size: 14px; max-width: none }
+  .profile__section{ gap: 10px }
+  /* Slightly narrower accord label on very small screens */
+  .accord{ grid-template-columns: minmax(60px, 90px) 1fr 30px; gap: 10px }
+  /* Note columns: tighter padding */
+  .note-col{ padding: 12px 12px 0 0 }
+  .note-col + .note-col{ padding-left: 12px }
+  .note-col__list{ font-size: 13px }
 }
 
 /* ----- bottle visual ----- */
 .profile__visual{
   aspect-ratio: 4/5;
-  background: linear-gradient(180deg, #F2ECE2 0%, #E2D7C5 100%);
+  /* flat ivory matches the Higgsfield-generated stills' ivory backdrop exactly */
+  background: var(--ivory);
   position: relative; overflow:hidden;
   border: 1px solid rgba(14,14,14,.06);
 }
 .profile__visual img{
-  position:absolute; inset:0; width:100%; height:100%;
-  object-fit: contain; padding: 10%;
+  /* fill container fully; uniform 4% padding gives bottle a small ivory
+     border that seamlessly blends with the still's background */
+  position: absolute;
+  inset: 0; width: 100%; height: 100%;
+  object-fit: contain;
+  padding: 4%;
   transition: transform .8s cubic-bezier(.2,.7,.2,1);
 }
 .profile.is-on .profile__visual img{ transform: scale(1.02) }
@@ -1215,7 +1247,8 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   gap: 0;
   border-top: 1px solid var(--rev-rule);
 }
-@media (max-width: 700px){
+/* notes-pyramid stays 3-col down to 380px — stacking wastes too much vertical space */
+@media (max-width: 380px){
   .notes-pyramid{ grid-template-columns: 1fr; border-top: none }
 }
 .note-col{
@@ -1223,7 +1256,7 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   padding: 16px 18px 0 0;
 }
 .note-col + .note-col{ border-left: 1px solid var(--rev-rule); padding-left: 18px }
-@media (max-width: 700px){
+@media (max-width: 380px){
   .note-col{ padding: 14px 0 14px; border-top: 1px solid var(--rev-rule) }
   .note-col + .note-col{ border-left: none; padding-left: 0 }
   .note-col:first-child{ border-top: none; padding-top: 0 }
@@ -1245,8 +1278,9 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   padding-top: 24px;
   border-top: 1px solid var(--rev-rule);
 }
-@media (max-width: 700px){
-  .profile__row{ grid-template-columns: 1fr; gap: 24px }
+/* season + intensity stays side-by-side down to 380px */
+@media (max-width: 380px){
+  .profile__row{ grid-template-columns: 1fr; gap: 20px }
 }
 .season-row{ display:flex; flex-wrap:wrap; gap: 6px 6px }
 .season-pill{
@@ -1445,7 +1479,38 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   .step__title{ max-width: none }
   .finder__progress{ position: static; margin-bottom: 16px }
   .optgrid{ grid-template-columns: repeat(2, 1fr) }
-  .profile__visual{ position: static }
+  /* NOTE: do NOT set position:static on .profile__visual — the image inside
+     is position:absolute and needs the visual to be the containing block */
+}
+
+/* ----- compact button bar on small screens ----- */
+@media (max-width: 560px){
+  .finder__cont{
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  /* Back: second row left, shrinks text + padding */
+  .finder__back{
+    padding: 11px 16px;
+    font-size: 10px;
+    letter-spacing: .14em;
+    order: 1;          /* row 1: left */
+    flex-shrink: 1;
+  }
+  .finder__cont .meta{
+    order: 2;          /* row 1: right (pushed by back's margin-right:auto) */
+    align-self: center;
+    font-size: 9px;
+  }
+  #finderNext{
+    order: 3;          /* row 2: full width */
+    width: 100%;
+    justify-content: center;
+    padding: 13px 18px;
+    font-size: 10px;
+    letter-spacing: .16em;
+  }
 }
 
 /* ============================================================
