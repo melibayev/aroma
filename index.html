@@ -790,6 +790,665 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
 .fam__body .meta b{ color:var(--ink); font-weight:400; white-space:nowrap }
 
 /* ============================================================
+   FINDER — Подбор аромата
+   ============================================================ */
+.finder{
+  background: var(--ivory);
+  color: var(--ink);
+  padding: clamp(120px, 18vh, 200px) var(--pad-x) clamp(120px, 16vh, 180px);
+  position: relative;
+}
+.finder__head{
+  display:flex; align-items:end; justify-content:space-between; gap:32px; flex-wrap:wrap;
+  margin-top: 28px;
+}
+.finder__head h2{
+  font-family:var(--serif); font-style:italic; font-weight:300;
+  font-size: clamp(40px, 6.5vw, 110px); line-height:.92; letter-spacing:-.02em;
+  margin:0;
+}
+.finder__head h2 .roman{ font-style:normal }
+.finder__lede{
+  max-width: 420px;
+  font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color: var(--mute); line-height:1.7;
+}
+
+.finder__shell{
+  margin-top: clamp(48px, 8vh, 96px);
+  position:relative;
+  border-top: 1px solid rgba(14,14,14,.12);
+  padding-top: clamp(40px, 6vh, 72px);
+}
+
+.finder__progress{
+  display:flex; gap:10px;
+  position:absolute; top: clamp(16px, 3vh, 28px); right: 0;
+}
+.finder__progress span{
+  width: 28px; height: 2px; background: rgba(14,14,14,.18); transition: background .4s ease;
+}
+.finder__progress span.is-on{ background: var(--ink) }
+.finder__progress span.is-done{ background: var(--accent) }
+
+.finder__viewport{
+  position:relative;
+}
+.step{
+  /* inactive steps fade out absolutely so they don't reserve layout */
+  position:absolute; top:0; left:0; right:0;
+  opacity:0; transform: translateY(16px);
+  pointer-events:none;
+  transition: opacity .45s ease, transform .45s ease;
+  display:flex; flex-direction:column; gap: clamp(20px, 3vh, 32px);
+}
+/* active step participates in flow so the viewport grows to its full height
+   and `.finder__cont` (Back / Continue) sits *below* the cards, not behind them */
+.step.is-active{
+  position: relative;
+  opacity:1; transform:none; pointer-events:auto;
+}
+
+.step__eyebrow{
+  font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  color: var(--mute);
+}
+.step__title{
+  font-family:var(--serif); font-weight:300;
+  font-size: clamp(28px, 4vw, 56px); line-height:1.05; letter-spacing:-.01em;
+  margin:0; max-width: 18ch;
+}
+.step__title em{ font-style:italic }
+.step__title .roman{ font-style:normal }
+.step__hint{
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--mute); margin:-8px 0 0;
+}
+
+/* ----- visual option grid (image cards for steps 1–4) ----- */
+.optgrid{
+  display: grid;
+  gap: clamp(10px, 1.4vw, 16px);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  max-width: 100%;
+}
+.optgrid--lg{ grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.opt{
+  appearance:none; background:transparent; cursor:pointer; padding:0;
+  border:1px solid rgba(14,14,14,.12);
+  text-align:left; color:inherit;
+  display:flex; flex-direction:column;
+  position: relative; overflow:hidden;
+  transition: border-color .35s ease, transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+}
+.opt:hover{ border-color: rgba(14,14,14,.5); transform: translateY(-2px) }
+.opt.is-on{ border-color: var(--ink); box-shadow: 0 14px 36px rgba(14,14,14,.10) }
+.opt.is-on::after{
+  content:""; position:absolute; top:14px; right:14px;
+  width:14px; height:14px; border-radius:50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 3px var(--ivory), 0 0 0 4px var(--ink);
+}
+.opt__media{
+  aspect-ratio: 4/5; position:relative; overflow:hidden;
+  background: linear-gradient(180deg, #EAE2D2 0%, #D8CDB8 100%);
+}
+.opt__media img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  transition: transform .9s cubic-bezier(.2,.7,.2,1), filter .6s ease;
+}
+.opt:hover .opt__media img{ transform: scale(1.04) }
+.opt.is-on .opt__media img{ filter: contrast(1.04) saturate(1.06) }
+.opt__media-fallback{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family: var(--serif); font-style:italic; font-weight:300;
+  font-size: clamp(28px, 3vw, 40px); color: rgba(14,14,14,.28);
+  letter-spacing: -.01em;
+}
+.opt__body{
+  padding: 16px 18px 18px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.opt__label{
+  font-family: var(--serif); font-style:italic; font-weight:300;
+  font-size: clamp(18px, 1.6vw, 22px); line-height:1.05; color: var(--ink);
+}
+.opt__sub{
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--mute);
+}
+
+/* ----- compact tag chips (notes, brands) ----- */
+.tags{ display:flex; flex-wrap:wrap; gap: 8px 10px; max-width: 880px; }
+.tag{
+  appearance:none; background:transparent; cursor:pointer;
+  border:1px solid rgba(14,14,14,.18);
+  color: var(--ink);
+  font-family: var(--mono); font-size: 11px; letter-spacing:.14em; text-transform:uppercase;
+  padding: 11px 16px; border-radius: 999px;
+  transition: background .25s ease, color .25s ease, border-color .25s ease;
+}
+.tag:hover{ border-color: var(--ink) }
+.tag.is-on{ background: var(--ink); color: var(--ivory); border-color: var(--ink) }
+
+/* ----- intensity slider (kept) ----- */
+.slider{ max-width: 520px; }
+.slider__track{
+  position:relative;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 22px 4px;
+}
+.slider__track::before{
+  content:""; position:absolute; left:8px; right:8px; top:50%;
+  height:1px; background: rgba(14,14,14,.22);
+}
+.slider__dot{
+  appearance:none; cursor:pointer;
+  width:14px; height:14px; border-radius:50%;
+  border:1px solid var(--ink); background: var(--ivory);
+  position:relative; z-index:1;
+  transition: background .25s ease, transform .25s ease;
+}
+.slider__dot:hover{ transform: scale(1.15) }
+.slider__dot.is-on{ background: var(--accent); border-color: var(--accent) }
+.slider__labels{
+  display:flex; justify-content:space-between;
+  font-family:var(--mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+  color: var(--mute);
+}
+
+/* ----- contextual continue / back (replaces finder__nav) ----- */
+.finder__cont{
+  margin-top: clamp(36px, 5vh, 56px);
+  display:flex; align-items:center; gap: 18px; justify-content:flex-end;
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .45s ease, transform .45s ease;
+}
+.finder__cont.is-on{ opacity:1; transform:none; pointer-events:auto }
+.finder__cont .meta{
+  font-family: var(--mono); font-size: 10px; letter-spacing:.22em; text-transform: uppercase;
+  color: var(--mute);
+}
+/* ----- unified pill buttons: .finder__btn (next + back share shape) ----- */
+.finder__cont button{
+  appearance:none; cursor:pointer;
+  background: var(--ink); color: var(--ivory);
+  border: 1px solid var(--ink);
+  font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  padding: 14px 22px; border-radius: 999px;
+  display:inline-flex; align-items:center; gap: 12px;
+  transition: background .3s ease, border-color .3s ease, color .3s ease, gap .3s ease;
+}
+.finder__cont button:hover{ background: var(--accent); border-color: var(--accent); gap: 16px }
+/* arrow construction shared by Next + Back (line + chevron tip) */
+.finder__cont .arrow{
+  width:18px; height:1px; background: currentColor; position:relative;
+  transition: width .3s ease;
+}
+.finder__cont button:hover .arrow{ width: 22px }
+.finder__cont .arrow::after{
+  content:""; position:absolute; right:0; top:-3px;
+  width:7px; height:7px;
+  border-top:1.5px solid currentColor; border-right:1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+/* back arrow flips: chevron on the LEFT, points left */
+.finder__cont .arrow.arrow--back::after{
+  right:auto; left:0;
+  border-top:none; border-right:none;
+  border-bottom:1.5px solid currentColor; border-left:1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+/* Back: ghost variant of the same pill (outlined, not filled) */
+.finder__back{
+  appearance:none; cursor:pointer;
+  background: transparent; color: var(--ink);
+  border: 1px solid rgba(14,14,14,.25);
+  font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  padding: 14px 22px; border-radius: 999px;
+  display:inline-flex; align-items:center; gap: 12px;
+  margin-right:auto;
+  transition: background .3s ease, border-color .3s ease, color .3s ease, gap .3s ease;
+}
+.finder__back:hover{
+  background: var(--ink); color: var(--ivory);
+  border-color: var(--ink);
+  gap: 16px;
+}
+.finder__back:hover .arrow{ width: 22px }
+.finder__back.is-disabled{ opacity:.3; pointer-events:none }
+
+/* ============================================================
+   REVEAL — perfume profile.
+   Goal: editorial, compact, deliberate. One vertical rhythm of
+   24/40/64 ish; no clamp jungle. Hierarchy: image+name → why →
+   accords → notes pyramid → season+intensity → CTA → form.
+   ============================================================ */
+.finder__reveal{
+  --rev-gap: 56px;       /* big rhythm step (between blocks) */
+  --rev-gap-md: 36px;    /* medium rhythm step */
+  --rev-gap-sm: 20px;    /* small rhythm (in-block) */
+  --rev-rule: rgba(14,14,14,.10);
+  margin-top: 72px;
+}
+@media (max-width: 700px){
+  .finder__reveal{ --rev-gap: 40px; --rev-gap-md: 28px; --rev-gap-sm: 18px; margin-top: 56px }
+}
+
+/* ---------- head ---------- */
+.reveal__head{
+  display:grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items:end; gap: 32px;
+  padding-top: var(--rev-gap-md);
+  border-top: 1px solid var(--rev-rule);
+}
+.reveal__head > div:first-child{ display:flex; flex-direction:column; gap: 14px }
+.reveal__head .step__eyebrow{ margin: 0 }
+.reveal__head h3{
+  margin:0;
+  font-family:var(--serif); font-style:italic; font-weight:300;
+  font-size: clamp(36px, 4.6vw, 64px);
+  line-height: .98; letter-spacing:-.015em;
+}
+.reveal__head h3 .roman{ font-style:normal }
+.reveal__head .lede{
+  max-width: 38ch;
+  font-family:var(--mono); font-size: 10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color: var(--mute); line-height: 1.75; margin: 4px 0 0;
+}
+.reveal__pager{
+  justify-self: end; align-self: end;
+  display:flex; gap: 6px;
+}
+@media (max-width: 760px){
+  .reveal__head{ grid-template-columns: 1fr; align-items:start; gap: 20px }
+  .reveal__pager{ justify-self: start }
+}
+.reveal__pager button{
+  appearance:none; cursor:pointer; background:transparent;
+  border: 1px solid rgba(14,14,14,.22); color: var(--ink);
+  font-family:var(--mono); font-size: 10px; letter-spacing:.18em;
+  width: 36px; height: 36px; border-radius: 50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-variant-numeric: tabular-nums;
+  transition: background .3s ease, color .3s ease, border-color .3s ease;
+}
+.reveal__pager button:hover{ border-color: var(--ink) }
+.reveal__pager button.is-on{ background: var(--ink); color: var(--ivory); border-color: var(--ink) }
+
+/* ---------- profile (image | body) ---------- */
+.profile{
+  margin-top: var(--rev-gap-md);
+  display:grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  gap: var(--rev-gap);
+  align-items: start;
+  opacity:0; transform: translateY(10px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.profile.is-on{ opacity:1; transform:none }
+@media (max-width: 980px){
+  .profile{ grid-template-columns: 1fr; gap: var(--rev-gap-md) }
+}
+
+/* ----- bottle visual ----- */
+.profile__visual{
+  aspect-ratio: 4/5;
+  background: linear-gradient(180deg, #F2ECE2 0%, #E2D7C5 100%);
+  position: relative; overflow:hidden;
+  border: 1px solid rgba(14,14,14,.06);
+}
+.profile__visual img{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit: contain; padding: 10%;
+  transition: transform .8s cubic-bezier(.2,.7,.2,1);
+}
+.profile.is-on .profile__visual img{ transform: scale(1.02) }
+.profile__visual-fallback{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family: var(--serif); font-style:italic; font-weight:300;
+  font-size: clamp(26px, 3vw, 40px); color: rgba(14,14,14,.24);
+  text-align:center; padding: 0 14%; line-height: 1.1;
+}
+
+/* ----- match badge — moved INSIDE body, no longer overlapping the bottle.
+        Sits to the right of the brand line on desktop, below on small. ----- */
+.profile__match{
+  display:inline-flex; align-items:baseline; gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(14,14,14,.18);
+  border-radius: 999px;
+  font-family: var(--mono); font-size: 9px; letter-spacing:.22em; text-transform:uppercase;
+  color: var(--mute);
+  white-space: nowrap;
+}
+.profile__match b{
+  font-family: var(--serif); font-style:italic; font-weight:300;
+  font-size: 14px; letter-spacing: 0; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----- right column: body (single rhythm: 24px between groups) ----- */
+.profile__body{
+  display:flex; flex-direction:column; gap: 28px; min-width: 0;
+}
+.profile__head{ display:flex; flex-direction:column; gap: 10px }
+.profile__brandrow{
+  display:flex; align-items:center; gap: 14px; flex-wrap:wrap;
+}
+.profile__brand{
+  font-family: var(--mono); font-size: 10px; letter-spacing:.26em; text-transform: uppercase;
+  color: var(--mute);
+}
+.profile__name{
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(32px, 3.8vw, 52px); line-height: 1; letter-spacing:-.015em;
+  margin: 4px 0 0; color: var(--ink);
+  word-break: break-word; hyphens: auto;
+}
+.profile__meta{
+  display:flex; gap: 0; flex-wrap:wrap; row-gap: 6px;
+  font-family:var(--mono); font-size: 10px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--mute); margin-top: 6px;
+}
+.profile__meta span{ position:relative; padding-right: 16px; margin-right: 16px }
+.profile__meta span:not(:last-child)::after{
+  content:""; position:absolute; right: 0; top: 50%;
+  width: 3px; height: 3px; background: rgba(14,14,14,.3); border-radius: 50%;
+  transform: translateY(-50%);
+}
+
+.profile__why{
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(15px, 1.2vw, 17px); line-height: 1.55; color: var(--ink);
+  border-left: 1px solid var(--accent);
+  padding: 4px 0 4px 16px; margin: 0;
+  max-width: 54ch;
+}
+
+.profile__section{ display:flex; flex-direction:column; gap: 14px }
+.profile__section > h5{
+  margin: 0;
+  font-family:var(--mono); font-size: 9px; letter-spacing:.26em; text-transform:uppercase;
+  color: var(--mute);
+}
+
+/* ---------- accord bars (per-family colors) ---------- */
+.accords{ display:flex; flex-direction:column; gap: 12px }
+.accord{
+  display:grid;
+  grid-template-columns: minmax(80px, 110px) 1fr 36px;
+  align-items:center; gap: 16px;
+}
+.accord__label{
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: 15px; line-height: 1; color: var(--ink); text-transform: lowercase;
+  white-space: nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.accord__bar{
+  position: relative; height: 4px; border-radius: 999px;
+  background: rgba(14,14,14,.07);
+  overflow: hidden;
+}
+.accord__fill{
+  position: absolute; top:0; left:0; bottom:0; width: 100%;
+  background: var(--accord-color, var(--accent));
+  border-radius: 999px;
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform 1.1s cubic-bezier(.2,.7,.2,1);
+}
+.profile.is-on .accord__fill{ transform: scaleX(var(--p, 1)) }
+.accord__pct{
+  font-family:var(--mono); font-size: 10px; letter-spacing:.04em;
+  color: var(--mute);
+  text-align:right; font-variant-numeric: tabular-nums;
+}
+@media (max-width: 520px){
+  .accord{ grid-template-columns: 76px 1fr 32px; gap: 12px }
+  .accord__label{ font-size: 14px }
+}
+
+/* ---------- note pyramid (top / heart / base) ---------- */
+.notes-pyramid{
+  display:grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--rev-rule);
+}
+@media (max-width: 700px){
+  .notes-pyramid{ grid-template-columns: 1fr; border-top: none }
+}
+.note-col{
+  display:flex; flex-direction:column; gap: 8px;
+  padding: 16px 18px 0 0;
+}
+.note-col + .note-col{ border-left: 1px solid var(--rev-rule); padding-left: 18px }
+@media (max-width: 700px){
+  .note-col{ padding: 14px 0 14px; border-top: 1px solid var(--rev-rule) }
+  .note-col + .note-col{ border-left: none; padding-left: 0 }
+  .note-col:first-child{ border-top: none; padding-top: 0 }
+}
+.note-col__title{
+  font-family:var(--mono); font-size: 9px; letter-spacing:.24em; text-transform:uppercase;
+  color: var(--accent);
+}
+.note-col__list{
+  font-family:var(--serif); font-style:italic; font-weight:300;
+  font-size: 15px; line-height: 1.55; color: var(--ink);
+  display:flex; flex-direction:column; gap: 0;
+}
+
+/* ---------- season + intensity (twin row) ---------- */
+.profile__row{
+  display:grid; grid-template-columns: 1.3fr 1fr;
+  gap: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rev-rule);
+}
+@media (max-width: 700px){
+  .profile__row{ grid-template-columns: 1fr; gap: 24px }
+}
+.season-row{ display:flex; flex-wrap:wrap; gap: 6px 6px }
+.season-pill{
+  font-family:var(--mono); font-size: 9px; letter-spacing:.18em; text-transform:uppercase;
+  padding: 7px 12px; border-radius: 999px;
+  border: 1px solid rgba(14,14,14,.18); color: var(--mute);
+  line-height: 1;
+}
+.season-pill.is-on{ background: var(--ink); color: var(--ivory); border-color: var(--ink) }
+
+.intensity-meter{
+  display:flex; gap: 5px; align-items:flex-end;
+  height: 28px;
+  max-width: 180px;
+}
+.intensity-meter span{
+  flex: 1; background: rgba(14,14,14,.10); border-radius: 1px;
+  transition: background .4s ease;
+}
+.intensity-meter span.is-on{ background: var(--accent) }
+.intensity-meter span:nth-child(1){ height: 32% }
+.intensity-meter span:nth-child(2){ height: 50% }
+.intensity-meter span:nth-child(3){ height: 68% }
+.intensity-meter span:nth-child(4){ height: 84% }
+.intensity-meter span:nth-child(5){ height: 100% }
+.intensity-caption{
+  font-family:var(--mono); font-size: 10px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--mute); margin-top: 8px; line-height: 1.5;
+}
+
+/* ---------- refill CTA: editorial split block ---------- */
+.profile__cta{
+  margin-top: var(--rev-gap);
+  background: var(--paper);
+  border: 1px solid rgba(14,14,14,.08);
+  overflow: hidden;
+  padding: clamp(36px, 5vw, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 80px);
+  position: relative;
+}
+/* corner ornament — small editorial touch */
+.profile__cta::before{
+  content:""; position:absolute; top: clamp(20px, 2.5vw, 32px); right: clamp(20px, 2.5vw, 32px);
+  width: 36px; height: 1px; background: var(--accent);
+}
+.profile__cta::after{
+  content:"AROMA · 10 ML";
+  position:absolute; top: clamp(20px, 2.5vw, 32px); right: clamp(64px, 5vw, 80px);
+  font-family: var(--mono); font-size: 9px; letter-spacing:.32em;
+  color: var(--mute); text-transform: uppercase;
+  transform: translateY(-3px);
+}
+.profile__cta-text{
+  display:flex; flex-direction:column; gap: clamp(20px, 2.5vh, 32px);
+  min-width: 0;
+}
+.profile__cta-eyebrow{
+  font-family: var(--mono); font-size: 10px; letter-spacing:.32em;
+  text-transform: uppercase; color: var(--mute);
+  display:inline-flex; align-items:center; gap: 12px;
+}
+.profile__cta-eyebrow::before{
+  content:""; width: 28px; height: 1px; background: var(--accent);
+}
+.profile__cta-text h4{
+  font-family:var(--serif); font-style:italic; font-weight:300;
+  font-size: clamp(40px, 5.6vw, 78px); line-height: .96; margin: 0;
+  letter-spacing:-.02em; color: var(--ink);
+}
+.profile__cta-text h4 .roman{ font-style: normal }
+.profile__cta-text h4 .num{
+  font-style: normal; font-weight: 400;
+  color: var(--accent);
+  display:inline-block; position:relative;
+}
+.profile__cta-text h4 .num sup{
+  font-size: .42em; vertical-align: top;
+  font-family: var(--mono); font-weight: 400; letter-spacing:.1em;
+  color: var(--mute);
+  margin-left: 4px; position: relative; top: .35em;
+}
+.profile__cta-text p{
+  font-family:var(--serif); font-style:italic; font-weight:300;
+  font-size: clamp(15px, 1.3vw, 18px); line-height: 1.55;
+  color: var(--ink); opacity: .78; margin: 0; max-width: 42ch;
+  letter-spacing: 0;
+}
+.profile__cta-meta{
+  display:flex; gap: clamp(28px, 3vw, 48px);
+  padding-top: clamp(8px, 1.5vh, 16px);
+  border-top: 1px solid rgba(14,14,14,.1);
+  margin-top: clamp(4px, 1vh, 8px);
+}
+.profile__cta-meta div{ display:flex; flex-direction:column; gap: 4px }
+.profile__cta-meta dt{
+  font-family: var(--mono); font-size: 9px; letter-spacing:.28em;
+  text-transform: uppercase; color: var(--mute); margin: 0;
+}
+.profile__cta-meta dd{
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(16px, 1.4vw, 20px); color: var(--ink); margin: 0;
+}
+/* video shown at full 9:16 natural ratio — no cropping */
+.reveal__pour{
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 9/16;
+  background: linear-gradient(180deg, #F2ECE2, #E5DAC6);
+  overflow: hidden;
+  align-self: center;
+  justify-self: end;
+  max-height: clamp(360px, 60vh, 560px);
+  position: relative;
+}
+.reveal__pour video{ width:100%; height:100%; object-fit:contain; display:block }
+@media (max-width: 820px){
+  .profile__cta{
+    grid-template-columns: 1fr;
+    padding: clamp(32px, 6vw, 48px);
+    gap: clamp(28px, 4vh, 40px);
+  }
+  .profile__cta::after, .profile__cta::before{ display:none }
+  .reveal__pour{ justify-self: center; max-width: clamp(220px, 70%, 320px) }
+}
+
+/* ----- form: clean horizontal row, baseline-aligned ----- */
+.reveal__form{
+  margin-top: var(--rev-gap-md);
+  display:grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+  gap: 28px;
+  align-items: end;
+  padding-top: 28px;
+  border-top: 1px solid var(--rev-rule);
+}
+@media (max-width: 820px){
+  .reveal__form{ grid-template-columns: 1fr; gap: 20px }
+}
+.reveal__field{ display:flex; flex-direction:column; gap: 10px; min-width: 0 }
+.reveal__field span{
+  font-family:var(--mono); font-size: 10px; letter-spacing:.22em; text-transform:uppercase;
+  color: var(--mute);
+}
+.reveal__field input,
+.reveal__field select{
+  appearance:none; background: transparent;
+  border:none; border-bottom: 1px solid rgba(14,14,14,.3);
+  padding: 10px 0;
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(18px, 2vw, 22px); color: var(--ink);
+  border-radius: 0;
+}
+.reveal__field input:focus,
+.reveal__field select:focus{ outline:none; border-bottom-color: var(--accent) }
+.reveal__form button{
+  appearance:none; cursor:pointer;
+  background: var(--ink); color: var(--ivory); border:1px solid var(--ink);
+  font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  padding: 14px 22px; border-radius: 999px;
+  display:inline-flex; align-items:center; gap: 10px;
+  transition: background .3s ease, border-color .3s ease;
+}
+.reveal__form button:hover{ background: var(--accent); border-color: var(--accent) }
+.reveal__form .arrow{ width:14px; height:1px; background: currentColor; position:relative }
+.reveal__form .arrow::after{
+  content:""; position:absolute; right:0; top:-3px;
+  width:7px; height:7px; border-top:1px solid currentColor; border-right:1px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.finder__restart{
+  align-self: flex-start; margin-top: 28px;
+  appearance:none; background: transparent; cursor:pointer; border:none;
+  font-family:var(--mono); font-size: 10px; letter-spacing:.22em; text-transform:uppercase;
+  color: var(--mute); padding: 8px 0;
+}
+.finder__restart::before{ content:"←"; margin-right: 8px; color: var(--ink) }
+.finder__restart:hover{ color: var(--ink) }
+
+.reveal__toast{
+  position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
+  background: var(--ink); color: var(--ivory);
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  padding: 14px 22px; border-radius: 999px;
+  z-index: 200; box-shadow: 0 12px 40px rgba(0,0,0,.18);
+  animation: toastIn .4s ease both;
+}
+@keyframes toastIn{ from{ opacity:0; transform:translate(-50%, 12px) } to{ opacity:1; transform:translate(-50%, 0) } }
+
+@media (max-width: 900px){
+  .finder{ padding: clamp(80px, 12vh, 120px) var(--pad-x) }
+  .step__title{ max-width: none }
+  .finder__progress{ position: static; margin-bottom: 16px }
+  .optgrid{ grid-template-columns: repeat(2, 1fr) }
+  .profile__visual{ position: static }
+}
+
+/* ============================================================
    BOUTIQUES — bento
    ============================================================ */
 .boutiques{
@@ -1050,6 +1709,7 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     <li><a href="#manifesto"  data-link="manifesto">Манифест</a></li>
     <li><a href="#archive"    data-link="archive">Архив</a></li>
     <li><a href="#families"   data-link="families">Семьи</a></li>
+    <li><a href="#finder"     data-link="finder">Подбор</a></li>
     <li><a href="#boutiques"  data-link="boutiques">Бутики</a></li>
   </ul>
   <a class="nav__cta" href="#contact" data-cursor="hover">Записаться <span class="arrow"></span></a>
@@ -1061,8 +1721,9 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   <a href="#archive"   data-link="archive">  <span>02</span> Архив </a>
   <a href="#ritual"    data-link="ritual">   <span>03</span> Ритуал </a>
   <a href="#families"  data-link="families"> <span>04</span> Семьи </a>
-  <a href="#boutiques" data-link="boutiques"><span>05</span> Бутики </a>
-  <a href="#contact"   data-link="contact">  <span>06</span> Контакты </a>
+  <a href="#finder"    data-link="finder">   <span>05</span> Подбор </a>
+  <a href="#boutiques" data-link="boutiques"><span>06</span> Бутики </a>
+  <a href="#contact"   data-link="contact">  <span>07</span> Контакты </a>
 </aside>
 
 <!-- =============================================================
@@ -1231,7 +1892,7 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     <div class="section-num">04 / Семьи</div>
     <div class="families__head">
       <h2><em>Семьи</em> <span class="roman">ароматов</span></h2>
-      <div class="eyebrow">Шесть территорий · Одна карта</div>
+      <div class="eyebrow">Четыре территории · Одна карта</div>
     </div>
 
     <article class="fam">
@@ -1253,22 +1914,6 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     <article class="fam alt">
       <div class="fam__media">
         <span class="fam__num">N° 02</span>
-        <img src="family_images/oriental.png" alt="Oriental">
-      </div>
-      <div class="fam__body">
-        <h3><em>Orientale</em></h3>
-        <p>Пряный шёпот восточного базара: ладан, шафран, чёрный перец. Аромат, в&nbsp;котором живёт золото и&nbsp;дым.</p>
-        <div class="meta">
-          <b>Notes</b><span>Ambre · Encens · Safran · Oud</span>
-          <b>Heure</b><span>Crépuscule · Hiver</span>
-          <b>Caractère</b><span>Mystérieux · Royal</span>
-        </div>
-      </div>
-    </article>
-
-    <article class="fam">
-      <div class="fam__media">
-        <span class="fam__num">N° 03</span>
         <img src="family_images/boise.png" alt="Woody">
       </div>
       <div class="fam__body">
@@ -1282,9 +1927,9 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
       </div>
     </article>
 
-    <article class="fam alt">
+    <article class="fam">
       <div class="fam__media">
-        <span class="fam__num">N° 04</span>
+        <span class="fam__num">N° 03</span>
         <img src="family_images/fraiche.png" alt="Fresh">
       </div>
       <div class="fam__body">
@@ -1298,25 +1943,9 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
       </div>
     </article>
 
-    <article class="fam">
-      <div class="fam__media">
-        <span class="fam__num">N° 05</span>
-        <img src="family_images/gourmande.png" alt="Gourmand">
-      </div>
-      <div class="fam__body">
-        <h3><em>Gourmande</em></h3>
-        <p>Память о&nbsp;кофейне в&nbsp;Стамбуле: ваниль, какао, табак, мёд. Сладость, которая&nbsp;не&nbsp;просит ничего взамен.</p>
-        <div class="meta">
-          <b>Notes</b><span>Vanille · Cacao · Tabac · Caramel</span>
-          <b>Heure</b><span>Nuit · Hiver</span>
-          <b>Caractère</b><span>Chaleureux · Addictif</span>
-        </div>
-      </div>
-    </article>
-
     <article class="fam alt">
       <div class="fam__media">
-        <span class="fam__num">N° 06</span>
+        <span class="fam__num">N° 04</span>
         <img src="https://images.unsplash.com/photo-1499678329028-101435549a4e?auto=format&fit=crop&w=1400&q=80" alt="Chypre">
       </div>
       <div class="fam__body">
@@ -1331,9 +1960,274 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
     </article>
   </section>
 
+  <!-- ========== FINDER (Подбор аромата) ========== -->
+  <section class="finder" id="finder">
+    <div class="section-num">05 / Подбор</div>
+    <div class="finder__head">
+      <h2><em>Не знаете,</em> <span class="roman">какой</span><br><em>аромат</em> <span class="roman">ваш?</span></h2>
+      <p class="finder__lede">Семь шагов — и мы предложим три аромата из&nbsp;коллекции, которые подходят именно вам.</p>
+    </div>
+
+    <div class="finder__shell" id="finderShell">
+      <!-- progress dots -->
+      <div class="finder__progress" id="finderProgress" aria-hidden="true"></div>
+
+      <!-- step viewport -->
+      <div class="finder__viewport" id="finderViewport">
+
+        <!-- Step 1 — Gender -->
+        <article class="step" data-step="1">
+          <div class="step__eyebrow">Шаг 01 / 07</div>
+          <h3 class="step__title"><em>Для</em> <span class="roman">кого</span> <em>аромат?</em></h3>
+          <div class="optgrid" data-key="gender" data-mode="single">
+            <button class="opt" data-value="men">
+              <span class="opt__media"><img src="family_images/quiz/gender-men.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">M</span></span>
+              <span class="opt__body"><span class="opt__label">Мужской</span><span class="opt__sub">Pour Lui</span></span>
+            </button>
+            <button class="opt" data-value="women">
+              <span class="opt__media"><img src="family_images/quiz/gender-women.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">F</span></span>
+              <span class="opt__body"><span class="opt__label">Женский</span><span class="opt__sub">Pour Elle</span></span>
+            </button>
+            <button class="opt" data-value="unisex">
+              <span class="opt__media"><img src="family_images/quiz/gender-unisex.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">U</span></span>
+              <span class="opt__body"><span class="opt__label">Унисекс</span><span class="opt__sub">Pour les deux</span></span>
+            </button>
+            <button class="opt" data-value="any">
+              <span class="opt__media"><img src="family_images/quiz/gender-any.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">∞</span></span>
+              <span class="opt__body"><span class="opt__label">Без разницы</span><span class="opt__sub">Sans préférence</span></span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Step 2 — Season -->
+        <article class="step" data-step="2">
+          <div class="step__eyebrow">Шаг 02 / 07</div>
+          <h3 class="step__title"><em>Когда</em> <span class="roman">вы будете</span> <em>его носить?</em></h3>
+          <div class="optgrid" data-key="season" data-mode="single">
+            <button class="opt" data-value="spring">
+              <span class="opt__media"><img src="family_images/quiz/season-spring.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Printemps</span></span>
+              <span class="opt__body"><span class="opt__label">Весна</span><span class="opt__sub">Mars — Mai</span></span>
+            </button>
+            <button class="opt" data-value="summer">
+              <span class="opt__media"><img src="family_images/quiz/season-summer.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Été</span></span>
+              <span class="opt__body"><span class="opt__label">Лето</span><span class="opt__sub">Juin — Août</span></span>
+            </button>
+            <button class="opt" data-value="fall">
+              <span class="opt__media"><img src="family_images/quiz/season-fall.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Automne</span></span>
+              <span class="opt__body"><span class="opt__label">Осень</span><span class="opt__sub">Sept — Nov</span></span>
+            </button>
+            <button class="opt" data-value="winter">
+              <span class="opt__media"><img src="family_images/quiz/season-winter.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Hiver</span></span>
+              <span class="opt__body"><span class="opt__label">Зима</span><span class="opt__sub">Déc — Févr</span></span>
+            </button>
+            <button class="opt" data-value="any">
+              <span class="opt__media"><img src="family_images/quiz/season-any.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Toute saison</span></span>
+              <span class="opt__body"><span class="opt__label">Круглый год</span><span class="opt__sub">Sans saison</span></span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Step 3 — Mood -->
+        <article class="step" data-step="3">
+          <div class="step__eyebrow">Шаг 03 / 07</div>
+          <h3 class="step__title"><em>Какое</em> <span class="roman">настроение</span> <em>хотите передать?</em></h3>
+          <p class="step__hint">Можно выбрать несколько.</p>
+          <div class="optgrid" data-key="mood" data-mode="multi">
+            <button class="opt" data-value="day">
+              <span class="opt__media"><img src="family_images/quiz/mood-day.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Le jour</span></span>
+              <span class="opt__body"><span class="opt__label">День</span><span class="opt__sub">Daylight</span></span>
+            </button>
+            <button class="opt" data-value="evening">
+              <span class="opt__media"><img src="family_images/quiz/mood-evening.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Le soir</span></span>
+              <span class="opt__body"><span class="opt__label">Вечер</span><span class="opt__sub">Twilight</span></span>
+            </button>
+            <button class="opt" data-value="work">
+              <span class="opt__media"><img src="family_images/quiz/mood-work.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Bureau</span></span>
+              <span class="opt__body"><span class="opt__label">Работа</span><span class="opt__sub">Office hours</span></span>
+            </button>
+            <button class="opt" data-value="elegant">
+              <span class="opt__media"><img src="family_images/quiz/mood-elegant.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Soirée</span></span>
+              <span class="opt__body"><span class="opt__label">Свидание</span><span class="opt__sub">Rendez-vous</span></span>
+            </button>
+            <button class="opt" data-value="bold">
+              <span class="opt__media"><img src="family_images/quiz/mood-bold.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Cérémonie</span></span>
+              <span class="opt__body"><span class="opt__label">Особый случай</span><span class="opt__sub">Statement</span></span>
+            </button>
+            <button class="opt" data-value="calm">
+              <span class="opt__media"><img src="family_images/quiz/mood-calm.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Tous les jours</span></span>
+              <span class="opt__body"><span class="opt__label">Каждый день</span><span class="opt__sub">Daily wear</span></span>
+            </button>
+            <button class="opt" data-value="warm">
+              <span class="opt__media"><img src="family_images/quiz/mood-warm.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Chaleur</span></span>
+              <span class="opt__body"><span class="opt__label">Тепло и уют</span><span class="opt__sub">Cocooning</span></span>
+            </button>
+            <button class="opt" data-value="fresh">
+              <span class="opt__media"><img src="family_images/quiz/mood-fresh.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Fraîcheur</span></span>
+              <span class="opt__body"><span class="opt__label">Свежесть</span><span class="opt__sub">Crisp & clean</span></span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Step 4 — Family -->
+        <article class="step" data-step="4">
+          <div class="step__eyebrow">Шаг 04 / 07</div>
+          <h3 class="step__title"><em>Какие</em> <span class="roman">семьи ароматов</span> <em>вам ближе?</em></h3>
+          <p class="step__hint">Можно выбрать несколько.</p>
+          <div class="optgrid" data-key="families" data-mode="multi">
+            <button class="opt" data-value="citrus">
+              <span class="opt__media"><img src="family_images/quiz/family-citrus.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Citrus</span></span>
+              <span class="opt__body"><span class="opt__label">Цитрусовые</span><span class="opt__sub">Bergamote · Citron</span></span>
+            </button>
+            <button class="opt" data-value="aromatic">
+              <span class="opt__media"><img src="family_images/quiz/family-aromatic.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Aromatique</span></span>
+              <span class="opt__body"><span class="opt__label">Ароматические</span><span class="opt__sub">Lavande · Sauge</span></span>
+            </button>
+            <button class="opt" data-value="fougère">
+              <span class="opt__media"><img src="family_images/quiz/family-fougere.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Fougère</span></span>
+              <span class="opt__body"><span class="opt__label">Фужерные</span><span class="opt__sub">Lavande · Mousse</span></span>
+            </button>
+            <button class="opt" data-value="green">
+              <span class="opt__media"><img src="family_images/quiz/family-green.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Verte</span></span>
+              <span class="opt__body"><span class="opt__label">Зелёные</span><span class="opt__sub">Galbanum · Thé</span></span>
+            </button>
+            <button class="opt" data-value="floral">
+              <span class="opt__media"><img src="family_images/floral.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Florale</span></span>
+              <span class="opt__body"><span class="opt__label">Цветочные</span><span class="opt__sub">Rose · Jasmin</span></span>
+            </button>
+            <button class="opt" data-value="fruity">
+              <span class="opt__media"><img src="family_images/quiz/family-fruity.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Fruitée</span></span>
+              <span class="opt__body"><span class="opt__label">Фруктовые</span><span class="opt__sub">Pêche · Cassis</span></span>
+            </button>
+            <button class="opt" data-value="spicy">
+              <span class="opt__media"><img src="family_images/quiz/family-spicy.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Épicée</span></span>
+              <span class="opt__body"><span class="opt__label">Пряные</span><span class="opt__sub">Poivre · Cardamome</span></span>
+            </button>
+            <button class="opt" data-value="woody">
+              <span class="opt__media"><img src="family_images/boise.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Boisée</span></span>
+              <span class="opt__body"><span class="opt__label">Древесные</span><span class="opt__sub">Santal · Cèdre</span></span>
+            </button>
+            <button class="opt" data-value="amber">
+              <span class="opt__media"><img src="family_images/oriental.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Ambrée</span></span>
+              <span class="opt__body"><span class="opt__label">Амбровые</span><span class="opt__sub">Ambre · Encens</span></span>
+            </button>
+            <button class="opt" data-value="leather">
+              <span class="opt__media"><img src="family_images/quiz/family-leather.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Cuir</span></span>
+              <span class="opt__body"><span class="opt__label">Кожаные</span><span class="opt__sub">Cuir · Suède</span></span>
+            </button>
+            <button class="opt" data-value="aquatic">
+              <span class="opt__media"><img src="family_images/fraiche.png" alt="" onerror="this.remove()"><span class="opt__media-fallback">Aquatique</span></span>
+              <span class="opt__body"><span class="opt__label">Морские</span><span class="opt__sub">Sel · Iode</span></span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Step 5 — Notes (filled at runtime) -->
+        <article class="step" data-step="5">
+          <div class="step__eyebrow">Шаг 05 / 07</div>
+          <h3 class="step__title"><em>Какие</em> <span class="roman">ноты</span> <em>вас вдохновляют?</em></h3>
+          <p class="step__hint">Подобраны под выбранные семьи. Можно пропустить.</p>
+          <div class="tags" data-key="notes" data-mode="multi" id="notesChips"></div>
+        </article>
+
+        <!-- Step 6 — Intensity -->
+        <article class="step" data-step="6">
+          <div class="step__eyebrow">Шаг 06 / 07</div>
+          <h3 class="step__title"><em>Насколько</em> <span class="roman">ярко?</span></h3>
+          <p class="step__hint">Шлейф и интенсивность звучания.</p>
+          <div class="slider" data-key="intensity">
+            <div class="slider__track">
+              <button class="slider__dot" data-value="1" aria-label="Сдержанно"></button>
+              <button class="slider__dot" data-value="2"></button>
+              <button class="slider__dot" data-value="3" aria-label="Средне"></button>
+              <button class="slider__dot" data-value="4"></button>
+              <button class="slider__dot" data-value="5" aria-label="Ярко"></button>
+            </div>
+            <div class="slider__labels">
+              <span>Сдержанно</span><span>Ярко</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Step 7 — Brands you love -->
+        <article class="step" data-step="7">
+          <div class="step__eyebrow">Шаг 07 / 07</div>
+          <h3 class="step__title"><em>Какие</em> <span class="roman">бренды</span> <em>вам нравятся?</em></h3>
+          <p class="step__hint">Не обязательно — поможет точнее подобрать.</p>
+          <div class="tags" data-key="brands" data-mode="multi" id="brandsChips"></div>
+        </article>
+      </div>
+
+      <!-- contextual continue (replaces Next button) -->
+      <div class="finder__cont" id="finderCont">
+        <button class="finder__back" id="finderBack" data-cursor="hover" type="button"><span class="arrow arrow--back"></span> Назад</button>
+        <span class="meta" id="finderContMeta"></span>
+        <button id="finderNext" data-cursor="hover" type="button">Продолжить <span class="arrow"></span></button>
+      </div>
+
+      <!-- ===== reveal — perfume profile ===== -->
+      <div class="finder__reveal" id="finderReveal" hidden>
+        <div class="reveal__head">
+          <div>
+            <div class="step__eyebrow">Ваш подбор</div>
+            <h3><em>Три</em> <span class="roman">аромата</span> <em>для вас.</em></h3>
+            <p class="lede">Алгоритм сопоставил ваши ответы с&nbsp;нашей коллекцией. Каждый из&nbsp;трёх — со&nbsp;своим характером.</p>
+          </div>
+          <div class="reveal__pager" id="revealPager" role="tablist"></div>
+        </div>
+
+        <!-- profile detail (rendered dynamically) -->
+        <div class="profile" id="profileBody"></div>
+
+        <!-- refill CTA -->
+        <div class="profile__cta">
+          <div class="profile__cta-text">
+            <span class="profile__cta-eyebrow">Только ваш объём</span>
+            <h4>
+              <em>Хотите</em> <span class="roman">свой</span><br>
+              <span class="num">10<sup>МЛ</sup></span><em>?</em>
+            </h4>
+            <p>Мы наполним фирменный флакон Aroma тем ароматом, который вы выберете — и доставим, или передадим в&nbsp;любом из&nbsp;бутиков.</p>
+            <dl class="profile__cta-meta">
+              <div>
+                <dt>Объём</dt>
+                <dd>10 мл</dd>
+              </div>
+              <div>
+                <dt>Доставка</dt>
+                <dd>1–2 дня</dd>
+              </div>
+              <div>
+                <dt>Оплата</dt>
+                <dd>при&nbsp;получении</dd>
+              </div>
+            </dl>
+          </div>
+          <figure class="reveal__pour">
+            <video id="flaconVideo" muted playsinline loop preload="none"></video>
+          </figure>
+        </div>
+
+        <form class="reveal__form" id="reserveForm" novalidate>
+          <label class="reveal__field">
+            <span>Выбран</span>
+            <select id="reserveChoice" required></select>
+          </label>
+          <label class="reveal__field">
+            <span>Телефон</span>
+            <input type="tel" id="reservePhone" placeholder="+998 __ ___ __ __" autocomplete="tel" required>
+          </label>
+          <button type="submit" data-cursor="hover">Оставить заявку <span class="arrow"></span></button>
+        </form>
+
+        <button class="finder__restart" id="finderRestart" data-cursor="hover" type="button">Начать заново</button>
+        <div class="reveal__toast" id="reserveToast" hidden>Спасибо. Мы позвоним в ближайшее время.</div>
+      </div>
+    </div>
+  </section>
+
   <!-- ========== BOUTIQUES ========== -->
   <section class="boutiques" id="boutiques">
-    <div class="section-num">05 / Бутики</div>
+    <div class="section-num">06 / Бутики</div>
     <div class="boutiques__head">
       <h2><em>Пять</em> <span class="roman">адресов,</span><br><em>один</em> <span class="roman">город.</span></h2>
       <div class="eyebrow">Ташкент · Узбекистан · 41.31 N 69.27 E</div>
@@ -1395,7 +2289,7 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
 
   <!-- ========== CONTACT ========== -->
   <section class="contact" id="contact">
-    <div class="section-num">06 / Контакты</div>
+    <div class="section-num">07 / Контакты</div>
     <div class="contact__inner">
       <div>
         <h2><em>Личная</em><br><span class="acc"><em>консультация</em></span>.</h2>
@@ -2232,12 +3126,608 @@ section{ position:relative; padding: clamp(80px, 12vh, 140px) var(--pad-x) }
   })();
 
   /* ====================================================
+     FINDER — Подбор аромата (visual quiz + recommender)
+     ==================================================== */
+  (() => {
+    const root = document.getElementById('finderShell');
+    if (!root) return;
+
+    /* ----- mid-level note pool per family ----- */
+    const NOTES_BY_FAMILY = {
+      citrus:    ['bergamot','lemon','grapefruit','orange','mandarin'],
+      aromatic:  ['lavender','sage','rosemary','mint','basil'],
+      'fougère': ['lavender','oakmoss','tonka bean','coumarin'],
+      green:     ['galbanum','violet leaf','tea','grass'],
+      floral:    ['rose','jasmine','tuberose','iris','peony','white flowers'],
+      fruity:    ['pineapple','blackcurrant','peach','apple','dry fruits'],
+      gourmand:  ['vanilla','cocoa','coffee','almond','tonka bean','dates','praline'],
+      spicy:     ['cardamom','pepper','cinnamon','clove','spices'],
+      woody:     ['sandalwood','cedar','guaiac wood','vetiver','pine needles','birch'],
+      amber:     ['amber','ambroxan','ambergris','labdanum'],
+      leather:   ['leather','suede','smoke'],
+      aquatic:   ['sea salt','marine notes','aldehydes'],
+    };
+
+    /* ----- pyramid classification heuristics ----- */
+    const TOP_HINT = new Set([
+      'bergamot','lemon','grapefruit','orange','mandarin','pink pepper','pepper','mint',
+      'lavender','sage','rosemary','basil','galbanum','violet leaf','tea','grass',
+      'pineapple','blackcurrant','peach','apple','green apple','dry fruits','dates'
+    ]);
+    const BASE_HINT = new Set([
+      'sandalwood','cedar','guaiac wood','vetiver','pine needles','birch','oud',
+      'amber','ambroxan','ambergris','labdanum','musk','tonka bean','vanilla',
+      'patchouli','leather','suede','smoke','oakmoss','cocoa','coffee',
+      'praline','almond','tobacco leaf','tobacco','caramel','iode'
+    ]);
+    function splitNotes(arr){
+      const top = [], heart = [], base = [];
+      arr.forEach(n => {
+        const k = n.toLowerCase();
+        if (TOP_HINT.has(k)) top.push(n);
+        else if (BASE_HINT.has(k)) base.push(n);
+        else heart.push(n);
+      });
+      // gentle balancing if any column is empty
+      if (top.length === 0 && heart.length > 1) top.push(heart.shift());
+      if (base.length === 0 && heart.length > 1) base.push(heart.pop());
+      return { top, heart, base };
+    }
+
+    /* ----- RU labels ----- */
+    const FAMILY_RU = {
+      citrus:'Цитрусы', aromatic:'Ароматические', 'fougère':'Фужерные', green:'Зелёные',
+      floral:'Цветочные', fruity:'Фруктовые', gourmand:'Гурманские', spicy:'Пряные',
+      woody:'Древесные', amber:'Амбровые', leather:'Кожаные', aquatic:'Морские'
+    };
+    /* per-family accord color — minimal, muted, on-brand with ivory/ink palette.
+       Used by the result-screen progress bars. Fallback = --accent. */
+    const FAMILY_COLOR = {
+      citrus:    '#D2B341', // muted gold
+      aromatic:  '#9CB48A', // sage
+      'fougère': '#7C8E63', // moss
+      green:     '#9CB48A', // soft fresh green
+      floral:    '#D9A8B7', // soft pink/lilac
+      fruity:    '#C97D6E', // coral
+      gourmand:  '#C9A77A', // creamy beige
+      spicy:     '#B66E3D', // terracotta
+      woody:     '#8B6F4E', // warm brown
+      amber:     '#B4884A', // warm amber
+      leather:   '#6E4F36', // tobacco brown
+      aquatic:   '#8BAFB8', // soft blue-grey
+    };
+    const SEASON_RU = { spring:'Весна', summer:'Лето', fall:'Осень', winter:'Зима' };
+    const MOOD_RU = {
+      day:'день', evening:'вечер', work:'работа', elegant:'свидание',
+      bold:'особый случай', calm:'каждый день', warm:'тепло и уют', fresh:'свежесть',
+      smoky:'дымчатость', sweet:'сладость', minimal:'минимализм', clean:'ясность'
+    };
+    const INTENSITY_RU = {
+      1:'Сдержанный шлейф', 2:'Камерный шлейф',
+      3:'Средняя интенсивность', 4:'Уверенный шлейф', 5:'Заметный шлейф'
+    };
+    const TIME_RU = {
+      day:'Утро · день', evening:'Вечер · ночь', work:'Будний день',
+      elegant:'Вечерний выход', bold:'Особый случай', calm:'Повседневно',
+      warm:'Холодные дни', fresh:'Тёплые дни'
+    };
+
+    /* ----- state ----- */
+    const state = {
+      step: 1,
+      gender: null,
+      season: null,
+      mood: [],
+      families: [],
+      notes: [],
+      intensity: 3,
+      brands: [],
+    };
+    const TOTAL_STEPS = 7;
+    const STEP_MODE = { // single | multi | slider
+      1:'single', 2:'single', 3:'multi', 4:'multi', 5:'multi', 6:'slider', 7:'multi'
+    };
+    const STEP_REQUIRED = new Set([1,2,3,4,6]); // 5 + 7 optional
+    const AUTO_ADVANCE_MS = 420;
+
+    let perfumes = [];
+    let results = [];   // [{p, pct, score, max}]
+    let activeIdx = 0;
+
+    /* ----- DOM ----- */
+    const stepsEls = root.querySelectorAll('.step');
+    const progressEl = document.getElementById('finderProgress');
+    const contEl   = document.getElementById('finderCont');
+    const contMeta = document.getElementById('finderContMeta');
+    const backBtn = document.getElementById('finderBack');
+    const nextBtn = document.getElementById('finderNext');
+    const reveal = document.getElementById('finderReveal');
+    const profileBody = document.getElementById('profileBody');
+    const pagerEl = document.getElementById('revealPager');
+    const choiceEl = document.getElementById('reserveChoice');
+    const phoneEl = document.getElementById('reservePhone');
+    const formEl = document.getElementById('reserveForm');
+    const toastEl = document.getElementById('reserveToast');
+    const restartBtn = document.getElementById('finderRestart');
+    const notesChips = document.getElementById('notesChips');
+    const brandsChips = document.getElementById('brandsChips');
+    const flaconVideo = document.getElementById('flaconVideo');
+
+    /* ----- progress dots ----- */
+    for (let i = 0; i < TOTAL_STEPS; i++){
+      progressEl.appendChild(document.createElement('span'));
+    }
+    const updateProgress = () => {
+      progressEl.querySelectorAll('span').forEach((s, i) => {
+        s.classList.toggle('is-on', i + 1 === state.step);
+        s.classList.toggle('is-done', i + 1 < state.step);
+      });
+    };
+
+    /* ----- selection (delegated, works for .opt and .tag) ----- */
+    let advanceTimer = 0;
+    root.addEventListener('click', e => {
+      const opt = e.target.closest('.opt, .tag');
+      if (opt && root.querySelector('.finder__viewport').contains(opt)){
+        const group = opt.closest('[data-key]');
+        if (!group) return;
+        const key = group.dataset.key;
+        const mode = group.dataset.mode;
+        const value = opt.dataset.value;
+        if (mode === 'single'){
+          group.querySelectorAll('.opt, .tag').forEach(c => c.classList.remove('is-on'));
+          opt.classList.add('is-on');
+          state[key] = value;
+          // auto-advance
+          clearTimeout(advanceTimer);
+          advanceTimer = setTimeout(() => {
+            if (state.step < TOTAL_STEPS) gotoStep(state.step + 1);
+            else runReveal();
+          }, AUTO_ADVANCE_MS);
+        } else {
+          opt.classList.toggle('is-on');
+          const arr = state[key];
+          const i = arr.indexOf(value);
+          if (i >= 0) arr.splice(i, 1); else arr.push(value);
+        }
+        updateCont();
+        save();
+        return;
+      }
+      const dot = e.target.closest('.slider__dot');
+      if (dot){
+        const group = dot.closest('.slider');
+        const key = group.dataset.key;
+        const v = parseInt(dot.dataset.value, 10);
+        state[key] = v;
+        group.querySelectorAll('.slider__dot').forEach((d, i) => {
+          d.classList.toggle('is-on', (i + 1) <= v);
+        });
+        updateCont();
+        save();
+        // auto-advance after slight pause
+        clearTimeout(advanceTimer);
+        advanceTimer = setTimeout(() => {
+          if (state.step < TOTAL_STEPS) gotoStep(state.step + 1);
+          else runReveal();
+        }, AUTO_ADVANCE_MS + 120);
+      }
+    });
+
+    /* ----- contextual continue control ----- */
+    function updateCont(){
+      const mode = STEP_MODE[state.step];
+      const required = STEP_REQUIRED.has(state.step);
+      const key = ({1:'gender',2:'season',3:'mood',4:'families',5:'notes',6:'intensity',7:'brands'})[state.step];
+      const val = state[key];
+      const filled = Array.isArray(val) ? val.length > 0 : !!val;
+
+      // back link visibility
+      backBtn.classList.toggle('is-disabled', state.step === 1);
+      backBtn.style.display = '';
+
+      // single + slider auto-advance, but we still expose a Continue button
+      // so the user has an explicit way forward (esp. on the slider step
+      // where auto-advance only fires after a tap).
+      const showNext = (mode === 'multi' || mode === 'slider');
+      nextBtn.style.display = showNext ? '' : 'none';
+
+      if (showNext){
+        const isLast = state.step === TOTAL_STEPS;
+        const labelDone = isLast ? 'Показать подбор' : 'Продолжить';
+        const labelSkip = isLast ? 'Показать подбор' : 'Пропустить';
+        const useSkip = !required && !filled;
+        nextBtn.firstChild.textContent = (useSkip ? labelSkip : labelDone) + ' ';
+        nextBtn.classList.toggle('is-disabled', required && !filled);
+
+        if (filled && Array.isArray(val)){
+          contMeta.textContent = `выбрано ${val.length}`;
+        } else if (mode === 'slider' && filled){
+          // slider always has a numeric value; show it as meta instead of a "select one" prompt
+          contMeta.innerHTML = `уровень ${val} / 5`;
+        } else {
+          contMeta.textContent = required ? 'выберите хотя&nbsp;бы один' : '';
+          contMeta.innerHTML = required ? 'выберите хотя&nbsp;бы один' : '';
+        }
+      } else {
+        contMeta.textContent = '';
+      }
+
+      // show cont if user can interact (back available OR multi step)
+      const showCont = (state.step > 1) || showNext;
+      contEl.classList.toggle('is-on', showCont);
+    }
+
+    /* ----- step navigation ----- */
+    function gotoStep(n){
+      clearTimeout(advanceTimer);
+      // blur active element so it can't trigger its own scroll-into-view
+      if (document.activeElement && document.activeElement.blur) {
+        try { document.activeElement.blur(); } catch (_){}
+      }
+      state.step = n;
+      stepsEls.forEach(s => s.classList.toggle('is-active', parseInt(s.dataset.step, 10) === n));
+      updateProgress();
+      // populate dynamic groups
+      if (n === 5) populateNotes();
+      if (n === 7) populateBrands();
+      updateCont();
+      // After switching steps, always bring the quiz shell into view so
+      // the user lands on the new question without manual scrolling.
+      // We must use lenis.scrollTo (not window.scrollTo) because Lenis
+      // owns all smooth-scroll on this page.
+      requestAnimationFrame(() => {
+        const shell = document.getElementById('finderShell');
+        if (!shell) return;
+        const targetY = shell.getBoundingClientRect().top + window.scrollY - 24;
+        if (window.scrollY > targetY + 4) {
+          if (typeof lenis !== 'undefined' && lenis && lenis.scrollTo) {
+            lenis.scrollTo(targetY, { duration: 0.9 });
+          } else {
+            window.scrollTo({ top: targetY, behavior: 'smooth' });
+          }
+        }
+      });
+    }
+
+    backBtn.addEventListener('click', () => {
+      if (state.step > 1) gotoStep(state.step - 1);
+    });
+    nextBtn.addEventListener('click', () => {
+      if (nextBtn.classList.contains('is-disabled')) return;
+      if (state.step < TOTAL_STEPS){ gotoStep(state.step + 1); save(); }
+      else runReveal();
+    });
+
+    /* ----- dynamic chip pools (notes, brands) ----- */
+    function populateNotes(){
+      const popKey = state.families.join(',');
+      if (notesChips.dataset.populated && notesChips.dataset.popKey === popKey) return;
+      notesChips.innerHTML = '';
+      const set = new Set();
+      state.families.forEach(f => (NOTES_BY_FAMILY[f] || []).forEach(n => set.add(n)));
+      // also include any already-selected notes
+      state.notes.forEach(n => set.add(n));
+      // if no families chosen yet, show union of all
+      if (set.size === 0){
+        Object.values(NOTES_BY_FAMILY).flat().forEach(n => set.add(n));
+      }
+      [...set].sort().forEach(n => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tag' + (state.notes.includes(n) ? ' is-on' : '');
+        b.dataset.value = n;
+        b.textContent = n;
+        notesChips.appendChild(b);
+      });
+      notesChips.dataset.populated = '1';
+      notesChips.dataset.popKey = popKey;
+    }
+    function populateBrands(){
+      if (brandsChips.dataset.populated) return;
+      const brands = [...new Set(perfumes.map(p => p.brand))].sort();
+      brands.forEach(b => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tag' + (state.brands.includes(b) ? ' is-on' : '');
+        btn.dataset.value = b;
+        btn.textContent = b;
+        brandsChips.appendChild(btn);
+      });
+      brandsChips.dataset.populated = '1';
+    }
+
+    /* ----- scoring ----- */
+    function score(p){
+      let s = 0, max = 0;
+      max += 3;
+      if (state.gender === 'any' || state.gender === 'unisex') s += 3;
+      else if (p.gender === 'unisex') s += 2;
+      else if (p.gender === state.gender) s += 3;
+
+      max += 2;
+      if (state.season === 'any' || (p.season || []).includes(state.season)) s += 2;
+
+      max += 9;
+      const famOverlap = state.families.filter(f => (p.families || []).includes(f)).length;
+      s += Math.min(9, famOverlap * 3);
+
+      max += 6;
+      const noteOverlap = state.notes.filter(n => (p.notes || []).includes(n)).length;
+      s += Math.min(6, noteOverlap);
+
+      max += 4;
+      const moodOverlap = state.mood.filter(m => (p.vibe || []).includes(m)).length;
+      s += Math.min(4, moodOverlap);
+
+      max += 3;
+      const dist = Math.abs((p.intensity || 3) - state.intensity);
+      s += Math.max(0, 3 - dist);
+
+      max += Math.min(3, state.brands.length || 0);
+      if (state.brands.includes(p.brand)) s += 1;
+
+      return { score: s, max, pct: max ? Math.round(s / max * 100) : 0 };
+    }
+    function recommend(){
+      return perfumes
+        .map(p => ({ p, ...score(p) }))
+        .sort((a, b) => b.score - a.score || (b.p.year || 0) - (a.p.year || 0))
+        .slice(0, 3);
+    }
+
+    /* ----- compose "why this matches" ----- */
+    function composeWhy(p){
+      const parts = [];
+      const fams = state.families.filter(f => (p.families || []).includes(f));
+      if (fams.length){
+        parts.push(`Звучит близко к&nbsp;вашим ${fams.map(f => FAMILY_RU[f] || f).join(' и&nbsp;').toLowerCase()}.`);
+      }
+      const notesH = state.notes.filter(n => (p.notes || []).includes(n));
+      if (notesH.length){
+        parts.push(`Раскрывается через ${notesH.slice(0, 3).join(', ')}.`);
+      }
+      const moods = state.mood.filter(m => (p.vibe || []).includes(m));
+      if (moods.length){
+        parts.push(`Подходит для${moods.map(m => ' ' + (MOOD_RU[m] || m)).join(',')}.`);
+      }
+      if (state.season && state.season !== 'any' && (p.season || []).includes(state.season)){
+        parts.push(`Идеален для сезона ${SEASON_RU[state.season] || state.season}.`);
+      }
+      if (parts.length === 0){
+        // fallback prose from perfume itself
+        const fam = (p.families || [])[0];
+        parts.push(`${FAMILY_RU[fam] || fam || 'Изысканный'} аромат с&nbsp;характером ${(p.vibe||[]).slice(0,2).map(v=>MOOD_RU[v]||v).join(', ') || 'самобытным'}.`);
+      }
+      return parts.join(' ');
+    }
+
+    /* ----- profile renderer ----- */
+    function renderProfile(idx){
+      activeIdx = Math.max(0, Math.min(results.length - 1, idx));
+      const { p, pct } = results[activeIdx];
+      const split = splitNotes(p.notes || []);
+      // accord weights — first family dominates, drop quickly. Up to 4 shown.
+      const fams = (p.families || []).slice(0, 4);
+      const weights = [0.55, 0.27, 0.12, 0.06].slice(0, fams.length);
+      const sum = weights.reduce((a, b) => a + b, 0) || 1;
+      const accordsArr = fams.map((f, i) => ({
+        key: f,
+        label: (FAMILY_RU[f] || f),
+        color: FAMILY_COLOR[f] || 'var(--accent)',
+        pct: Math.round((weights[i] / sum) * 100),
+      }));
+      const seasons = ['spring','summer','fall','winter'];
+      const seasonHTML = seasons.map(s =>
+        `<span class="season-pill ${(p.season||[]).includes(s) ? 'is-on' : ''}">${SEASON_RU[s]}</span>`
+      ).join('');
+      const intHTML = [1,2,3,4,5].map(n =>
+        `<span class="${n <= (p.intensity || 3) ? 'is-on' : ''}"></span>`
+      ).join('');
+      const time = (p.vibe || []).map(v => TIME_RU[v]).filter(Boolean)[0] || 'Универсально';
+      const why = composeWhy(p);
+      const safeName = (p.name || '').replace(/'/g, '&apos;');
+      const safeBrand = (p.brand || '').replace(/'/g, '&apos;');
+
+      profileBody.innerHTML = `
+        <figure class="profile__visual">
+          <img src="${p.image || ''}" alt="${safeName}"
+               onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('beforeend','<span class=&quot;profile__visual-fallback&quot;>${safeBrand} — ${safeName}</span>')">
+        </figure>
+        <div class="profile__body">
+          <div class="profile__head">
+            <div class="profile__brandrow">
+              <span class="profile__brand">${p.brand}${p.year ? ' · ' + p.year : ''}</span>
+              <span class="profile__match">Совпадение <b>${pct}%</b></span>
+            </div>
+            <h4 class="profile__name">${p.name}</h4>
+            <div class="profile__meta">
+              <span>${p.concentration || 'EDP'}</span>
+              <span>${(p.gender || '').replace('men','для него').replace('women','для неё').replace('unisex','унисекс')}</span>
+              <span>${(p.families || []).map(f => FAMILY_RU[f] || f).slice(0,2).join(' · ')}</span>
+            </div>
+          </div>
+          <p class="profile__why">${why}</p>
+          <section class="profile__section">
+            <h5>Аккорды</h5>
+            <div class="accords">${accordsArr.map(a => `
+              <div class="accord">
+                <div class="accord__label">${a.label.toLowerCase()}</div>
+                <div class="accord__bar"><div class="accord__fill" style="--p:${(a.pct/100).toFixed(2)}; --accord-color:${a.color}"></div></div>
+                <div class="accord__pct">${a.pct}%</div>
+              </div>`).join('')}</div>
+          </section>
+          <section class="profile__section">
+            <h5>Пирамида ароматов</h5>
+            <div class="notes-pyramid">
+              <div class="note-col">
+                <div class="note-col__title">Верхние</div>
+                <div class="note-col__list">${split.top.map(n=>`<span>${n}</span>`).join('') || '<span>—</span>'}</div>
+              </div>
+              <div class="note-col">
+                <div class="note-col__title">Сердце</div>
+                <div class="note-col__list">${split.heart.map(n=>`<span>${n}</span>`).join('') || '<span>—</span>'}</div>
+              </div>
+              <div class="note-col">
+                <div class="note-col__title">База</div>
+                <div class="note-col__list">${split.base.map(n=>`<span>${n}</span>`).join('') || '<span>—</span>'}</div>
+              </div>
+            </div>
+          </section>
+          <div class="profile__row">
+            <section class="profile__section">
+              <h5>Сезон</h5>
+              <div class="season-row">${seasonHTML}</div>
+            </section>
+            <section class="profile__section">
+              <h5>Звучание</h5>
+              <div class="intensity-meter">${intHTML}</div>
+              <div class="intensity-caption">${INTENSITY_RU[p.intensity || 3]} · ${time}</div>
+            </section>
+          </div>
+        </div>
+      `;
+      // animate in
+      profileBody.classList.remove('is-on');
+      void profileBody.offsetWidth;
+      profileBody.classList.add('is-on');
+
+      // sync pager
+      pagerEl.querySelectorAll('button').forEach((b, i) => {
+        b.classList.toggle('is-on', i === activeIdx);
+      });
+      // sync select
+      if (choiceEl) choiceEl.value = p.id;
+    }
+
+    /* ----- reveal ----- */
+    function runReveal(){
+      results = recommend();
+      if (results.length === 0) return;
+      // pager
+      pagerEl.innerHTML = '';
+      results.forEach((_, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.dataset.idx = i;
+        b.textContent = String(i + 1).padStart(2, '0');
+        if (i === 0) b.classList.add('is-on');
+        b.addEventListener('click', () => renderProfile(i));
+        pagerEl.appendChild(b);
+      });
+      // populate select
+      choiceEl.innerHTML = '';
+      results.forEach(({ p }) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.brand} — ${p.name}`;
+        choiceEl.appendChild(opt);
+      });
+      // initial render
+      renderProfile(0);
+
+      // show reveal, hide quiz
+      reveal.hidden = false;
+      root.querySelector('.finder__viewport').style.display = 'none';
+      contEl.style.display = 'none';
+      progressEl.style.display = 'none';
+
+      // try to load flacon video
+      if (flaconVideo && !flaconVideo.dataset.tried){
+        flaconVideo.dataset.tried = '1';
+        flaconVideo.src = 'videos/flacon-pour.mp4';
+        flaconVideo.addEventListener('error', () => { flaconVideo.remove(); }, { once: true });
+        flaconVideo.play().catch(() => {});
+      }
+
+      reveal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      save();
+    }
+
+    /* ----- restart ----- */
+    restartBtn.addEventListener('click', () => {
+      Object.assign(state, {
+        step: 1, gender: null, season: null,
+        mood: [], families: [], notes: [], intensity: 3, brands: [],
+      });
+      root.querySelectorAll('.opt.is-on, .tag.is-on').forEach(c => c.classList.remove('is-on'));
+      root.querySelectorAll('.slider__dot.is-on').forEach(d => d.classList.remove('is-on'));
+      notesChips.innerHTML = ''; delete notesChips.dataset.populated; delete notesChips.dataset.popKey;
+      brandsChips.innerHTML = ''; delete brandsChips.dataset.populated;
+      reveal.hidden = true;
+      root.querySelector('.finder__viewport').style.display = '';
+      contEl.style.display = '';
+      progressEl.style.display = '';
+      try { localStorage.removeItem('aroma:finder'); } catch (_){}
+      gotoStep(1);
+      root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* ----- reservation ----- */
+    formEl.addEventListener('submit', e => {
+      e.preventDefault();
+      const phone = (phoneEl.value || '').trim();
+      const choice = choiceEl.value;
+      if (phone.length < 7 || !choice){ phoneEl.focus(); return; }
+      const reservations = JSON.parse(localStorage.getItem('aroma:reservations') || '[]');
+      reservations.push({ perfume_id: choice, phone, ts: Date.now() });
+      try { localStorage.setItem('aroma:reservations', JSON.stringify(reservations)); } catch (_){}
+      toastEl.hidden = false;
+      setTimeout(() => { toastEl.hidden = true; }, 4000);
+      formEl.reset();
+    });
+
+    /* ----- persistence ----- */
+    function save(){
+      try { localStorage.setItem('aroma:finder', JSON.stringify(state)); } catch (_){}
+    }
+    function restore(){
+      try {
+        const raw = localStorage.getItem('aroma:finder');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        Object.assign(state, saved, { step: 1 });
+        root.querySelectorAll('[data-key]').forEach(group => {
+          const key = group.dataset.key;
+          const val = state[key];
+          if (Array.isArray(val)){
+            group.querySelectorAll('.opt, .tag').forEach(c => c.classList.toggle('is-on', val.includes(c.dataset.value)));
+          } else if (val){
+            group.querySelectorAll('.opt, .tag').forEach(c => c.classList.toggle('is-on', c.dataset.value === val));
+          }
+        });
+        const sl = root.querySelector('.slider');
+        if (sl && state.intensity){
+          sl.querySelectorAll('.slider__dot').forEach((d, i) => d.classList.toggle('is-on', (i + 1) <= state.intensity));
+        }
+      } catch (_){}
+    }
+
+    /* ----- load catalog ----- */
+    fetch('data/perfumes.json')
+      .then(r => r.json())
+      .then(data => {
+        perfumes = (data && data.perfumes) || [];
+        restore();
+        gotoStep(state.step || 1);
+      })
+      .catch(() => {
+        perfumes = [];
+        restore();
+        gotoStep(1);
+      });
+
+    // initial render in case fetch is slow
+    gotoStep(1);
+  })();
+
+  /* ====================================================
      NAV active link tracking + mix-blend updates
      ==================================================== */
   (() => {
     const main = document.querySelectorAll('.nav__menu a[data-link]');
     const side = document.querySelectorAll('.side-index a[data-link]');
-    const map  = ['hero','manifesto','archive','ritual','families','boutiques','contact'];
+    const map  = ['hero','manifesto','archive','ritual','families','finder','boutiques','contact'];
     map.forEach(id => {
       const sec = document.getElementById(id);
       if (!sec) return;

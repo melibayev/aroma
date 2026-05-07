@@ -1,0 +1,690 @@
+﻿{
+    "_comment":  "Aroma Parfum launch catalog. Edit freely. id must match a slug used elsewhere. All entries assumed refillable into 10ml Aroma flacon. Image paths point to working files (refs are real product shots until Higgsfield restyle finals are produced).",
+    "perfumes":  [
+                     {
+                         "id":  "tom-ford-tobacco-vanille",
+                         "brand":  "Tom Ford",
+                         "name":  "Tobacco Vanille",
+                         "year":  2007,
+                         "gender":  "unisex",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "amber",
+                                          "spicy",
+                                          "gourmand"
+                                      ],
+                         "notes":  [
+                                       "tobacco leaf",
+                                       "spices",
+                                       "tonka bean",
+                                       "vanilla",
+                                       "cocoa",
+                                       "dry fruits"
+                                   ],
+                         "vibe":  [
+                                      "warm",
+                                      "smoky",
+                                      "evening",
+                                      "winter"
+                                  ],
+                         "intensity":  5,
+                         "season":  [
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/tobacco.png"
+                     },
+                     {
+                         "id":  "dior-sauvage-edp",
+                         "brand":  "Dior",
+                         "name":  "Sauvage EDP",
+                         "year":  2018,
+                         "gender":  "men",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "aromatic",
+                                          "spicy",
+                                          "woody"
+                                      ],
+                         "notes":  [
+                                       "bergamot",
+                                       "pepper",
+                                       "lavender",
+                                       "ambroxan",
+                                       "vanilla"
+                                   ],
+                         "vibe":  [
+                                      "bold",
+                                      "fresh",
+                                      "day",
+                                      "evening"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "spring",
+                                        "summer",
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/dior.png"
+                     },
+                     {
+                         "id":  "versace-eros",
+                         "brand":  "Versace",
+                         "name":  "Eros Flame",
+                         "year":  2018,
+                         "gender":  "men",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "aromatic",
+                                          "spicy",
+                                          "amber"
+                                      ],
+                         "notes":  [
+                                       "mandarin",
+                                       "black pepper",
+                                       "rose absolute",
+                                       "tonka bean",
+                                       "vanilla",
+                                       "patchouli"
+                                   ],
+                         "vibe":  [
+                                      "bold",
+                                      "warm",
+                                      "evening"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "fall",
+                                        "winter",
+                                        "spring"
+                                    ],
+                         "image":  "parfumes_images/versace-eros.png"
+                     },
+                     {
+                         "id":  "chanel-coco-mademoiselle",
+                         "brand":  "Chanel",
+                         "name":  "Coco Mademoiselle",
+                         "year":  2001,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "floral",
+                                          "amber",
+                                          "citrus"
+                                      ],
+                         "notes":  [
+                                       "orange",
+                                       "bergamot",
+                                       "rose",
+                                       "jasmine",
+                                       "patchouli",
+                                       "vanilla"
+                                   ],
+                         "vibe":  [
+                                      "elegant",
+                                      "day",
+                                      "evening"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "spring",
+                                        "summer",
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/chanel-coco-mademoiselle.png"
+                     },
+                     {
+                         "id":  "ysl-black-opium",
+                         "brand":  "YSL",
+                         "name":  "Black Opium",
+                         "year":  2014,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "gourmand",
+                                          "floral",
+                                          "amber"
+                                      ],
+                         "notes":  [
+                                       "coffee",
+                                       "vanilla",
+                                       "white flowers",
+                                       "pink pepper",
+                                       "patchouli"
+                                   ],
+                         "vibe":  [
+                                      "bold",
+                                      "evening",
+                                      "winter"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/ysl-black-opium.png"
+                     },
+                     {
+                         "id":  "mm-replica-by-the-fireplace",
+                         "brand":  "Maison Margiela",
+                         "name":  "Replica вЂ” By the Fireplace",
+                         "year":  2015,
+                         "gender":  "unisex",
+                         "concentration":  "EDT",
+                         "families":  [
+                                          "woody",
+                                          "gourmand",
+                                          "amber"
+                                      ],
+                         "notes":  [
+                                       "chestnut",
+                                       "guaiac wood",
+                                       "vanilla",
+                                       "clove",
+                                       "smoke"
+                                   ],
+                         "vibe":  [
+                                      "warm",
+                                      "smoky",
+                                      "evening",
+                                      "winter"
+                                  ],
+                         "intensity":  3,
+                         "season":  [
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/mm-replica-by-the-fireplace.png"
+                     },
+                     {
+                         "id":  "le-labo-santal-33",
+                         "brand":  "Le Labo",
+                         "name":  "Santal 33",
+                         "year":  2011,
+                         "gender":  "unisex",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "woody",
+                                          "leather",
+                                          "aromatic"
+                                      ],
+                         "notes":  [
+                                       "sandalwood",
+                                       "cardamom",
+                                       "iris",
+                                       "violet",
+                                       "leather"
+                                   ],
+                         "vibe":  [
+                                      "minimal",
+                                      "day",
+                                      "evening"
+                                  ],
+                         "intensity":  3,
+                         "season":  [
+                                        "spring",
+                                        "summer",
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/le-labo-santal-33.png"
+                     },
+                     {
+                         "id":  "byredo-gypsy-water",
+                         "brand":  "Byredo",
+                         "name":  "Gypsy Water",
+                         "year":  2008,
+                         "gender":  "unisex",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "woody",
+                                          "aromatic",
+                                          "green"
+                                      ],
+                         "notes":  [
+                                       "bergamot",
+                                       "juniper",
+                                       "incense",
+                                       "pine needles",
+                                       "vanilla",
+                                       "amber"
+                                   ],
+                         "vibe":  [
+                                      "fresh",
+                                      "calm",
+                                      "day"
+                                  ],
+                         "intensity":  2,
+                         "season":  [
+                                        "spring",
+                                        "summer"
+                                    ],
+                         "image":  "parfumes_images/gypsy.png"
+                     },
+                     {
+                         "id":  "creed-aventus",
+                         "brand":  "Creed",
+                         "name":  "Aventus",
+                         "year":  2010,
+                         "gender":  "men",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "fruity",
+                                          "woody",
+                                          "amber"
+                                      ],
+                         "notes":  [
+                                       "pineapple",
+                                       "blackcurrant",
+                                       "birch",
+                                       "patchouli",
+                                       "musk",
+                                       "ambergris"
+                                   ],
+                         "vibe":  [
+                                      "bold",
+                                      "elegant",
+                                      "day",
+                                      "evening"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "spring",
+                                        "summer",
+                                        "fall"
+                                    ],
+                         "image":  "parfumes_images/creed.png"
+                     },
+                     {
+                         "id":  "mancera-cedrat-boise",
+                         "brand":  "Mancera",
+                         "name":  "Cedrat Boise",
+                         "year":  2011,
+                         "gender":  "unisex",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "citrus",
+                                          "woody",
+                                          "aromatic"
+                                      ],
+                         "notes":  [
+                                       "lemon",
+                                       "bergamot",
+                                       "cedar",
+                                       "vanilla",
+                                       "musk"
+                                   ],
+                         "vibe":  [
+                                      "fresh",
+                                      "bold",
+                                      "day"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "spring",
+                                        "summer"
+                                    ],
+                         "image":  "parfumes_images/mancera-cedrat-boise.png"
+                     },
+                     {
+                         "id":  "lattafa-khamrah",
+                         "brand":  "Lattafa",
+                         "name":  "Khamrah",
+                         "year":  2022,
+                         "gender":  "unisex",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "gourmand",
+                                          "spicy",
+                                          "amber"
+                                      ],
+                         "notes":  [
+                                       "dates",
+                                       "cinnamon",
+                                       "vanilla",
+                                       "tonka bean",
+                                       "praline",
+                                       "oud"
+                                   ],
+                         "vibe":  [
+                                      "warm",
+                                      "sweet",
+                                      "evening",
+                                      "winter"
+                                  ],
+                         "intensity":  5,
+                         "season":  [
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/lattafa-khamrah.png"
+                     },
+                     {
+                         "id":  "jpg-le-male-le-parfum",
+                         "brand":  "Jean Paul Gaultier",
+                         "name":  "Le Male Le Parfum",
+                         "year":  2020,
+                         "gender":  "men",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "amber",
+                                          "woody",
+                                          "gourmand"
+                                      ],
+                         "notes":  [
+                                       "lavender",
+                                       "cardamom",
+                                       "tonka bean",
+                                       "vanilla",
+                                       "cocoa"
+                                   ],
+                         "vibe":  [
+                                      "warm",
+                                      "evening",
+                                      "winter"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/jpg-le-male-le-parfum.png"
+                     },
+                     {
+                         "id":  "carolina-herrera-good-girl",
+                         "brand":  "Carolina Herrera",
+                         "name":  "Good Girl",
+                         "year":  2016,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "gourmand",
+                                          "floral",
+                                          "amber"
+                                      ],
+                         "notes":  [
+                                       "almond",
+                                       "coffee",
+                                       "tuberose",
+                                       "jasmine",
+                                       "tonka bean",
+                                       "cocoa"
+                                   ],
+                         "vibe":  [
+                                      "bold",
+                                      "evening",
+                                      "winter"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/carolina-herrera-good-girl.png"
+                     },
+                     {
+                         "id":  "jo-malone-wood-sage-sea-salt",
+                         "brand":  "Jo Malone London",
+                         "name":  "Wood Sage \u0026 Sea Salt",
+                         "year":  2014,
+                         "gender":  "unisex",
+                         "concentration":  "Cologne",
+                         "families":  [
+                                          "woody",
+                                          "aromatic",
+                                          "aquatic"
+                                      ],
+                         "notes":  [
+                                       "sea salt",
+                                       "sage",
+                                       "ambrette seeds",
+                                       "grapefruit"
+                                   ],
+                         "vibe":  [
+                                      "fresh",
+                                      "calm",
+                                      "day"
+                                  ],
+                         "intensity":  2,
+                         "season":  [
+                                        "spring",
+                                        "summer"
+                                    ],
+                         "image":  "parfumes_images/jo-malone-wood-sage-sea-salt.png"
+                     },
+                     {
+                         "id":  "dior-miss-dior",
+                         "brand":  "Dior",
+                         "name":  "Miss Dior ChГ©rie",
+                         "year":  2005,
+                         "gender":  "women",
+                         "concentration":  "EDT",
+                         "families":  [
+                                          "floral",
+                                          "fruity",
+                                          "gourmand"
+                                      ],
+                         "notes":  [
+                                       "strawberry leaves",
+                                       "tangerine",
+                                       "green apple",
+                                       "rose",
+                                       "patchouli",
+                                       "musk"
+                                   ],
+                         "vibe":  [
+                                      "fresh",
+                                      "elegant",
+                                      "day"
+                                  ],
+                         "intensity":  3,
+                         "season":  [
+                                        "spring",
+                                        "summer"
+                                    ],
+                         "image":  "parfumes_images/dior-miss-dior.png"
+                     },
+                     {
+                         "id":  "dior-jadore",
+                         "brand":  "Dior",
+                         "name":  "J\u0027adore",
+                         "year":  1999,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "floral",
+                                          "fruity"
+                                      ],
+                         "notes":  [
+                                       "ylang-ylang",
+                                       "damascus rose",
+                                       "jasmine sambac",
+                                       "pear",
+                                       "melon"
+                                   ],
+                         "vibe":  [
+                                      "elegant",
+                                      "warm",
+                                      "evening",
+                                      "day"
+                                  ],
+                         "intensity":  4,
+                         "season":  [
+                                        "spring",
+                                        "summer",
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/dior-jadore.png"
+                     },
+                     {
+                         "id":  "viktor-rolf-flowerbomb",
+                         "brand":  "Viktor \u0026 Rolf",
+                         "name":  "Flowerbomb",
+                         "year":  2005,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "floral",
+                                          "amber",
+                                          "gourmand"
+                                      ],
+                         "notes":  [
+                                       "bergamot",
+                                       "tea",
+                                       "jasmine sambac",
+                                       "rose",
+                                       "orchid",
+                                       "patchouli",
+                                       "musk"
+                                   ],
+                         "vibe":  [
+                                      "bold",
+                                      "sweet",
+                                      "evening"
+                                  ],
+                         "intensity":  5,
+                         "season":  [
+                                        "fall",
+                                        "winter",
+                                        "spring"
+                                    ],
+                         "image":  "parfumes_images/viktor-rolf-flowerbomb.png"
+                     },
+                     {
+                         "id":  "giorgio-armani-my-way",
+                         "brand":  "Giorgio Armani",
+                         "name":  "My Way",
+                         "year":  2020,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "floral",
+                                          "amber",
+                                          "woody"
+                                      ],
+                         "notes":  [
+                                       "bergamot",
+                                       "orange blossom",
+                                       "indian tuberose",
+                                       "egyptian jasmine",
+                                       "white musk",
+                                       "cedar"
+                                   ],
+                         "vibe":  [
+                                      "elegant",
+                                      "warm",
+                                      "day",
+                                      "evening"
+                                  ],
+                         "intensity":  3,
+                         "season":  [
+                                        "spring",
+                                        "summer",
+                                        "fall"
+                                    ],
+                         "image":  "parfumes_images/giorgio-armani-my-way.png"
+                     },
+                     {
+                         "id":  "dolce-gabbana-light-blue",
+                         "brand":  "Dolce \u0026 Gabbana",
+                         "name":  "Light Blue Eau Intense pour Homme",
+                         "year":  2017,
+                         "gender":  "men",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "aromatic",
+                                          "citrus",
+                                          "aquatic"
+                                      ],
+                         "notes":  [
+                                       "mandarin",
+                                       "grapefruit",
+                                       "juniper",
+                                       "sea notes",
+                                       "amber",
+                                       "musk"
+                                   ],
+                         "vibe":  [
+                                      "fresh",
+                                      "clean",
+                                      "day",
+                                      "summer"
+                                  ],
+                         "intensity":  3,
+                         "season":  [
+                                        "spring",
+                                        "summer"
+                                    ],
+                         "image":  "parfumes_images/dolce-gabbana-light-blue.png"
+                     },
+                     {
+                         "id":  "gucci-flora-gorgeous-gardenia",
+                         "brand":  "Gucci",
+                         "name":  "Flora Gorgeous Gardenia",
+                         "year":  2021,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "floral",
+                                          "fruity",
+                                          "gourmand"
+                                      ],
+                         "notes":  [
+                                       "pear",
+                                       "red berries",
+                                       "gardenia",
+                                       "jasmine",
+                                       "brown sugar",
+                                       "patchouli"
+                                   ],
+                         "vibe":  [
+                                      "sweet",
+                                      "fresh",
+                                      "day"
+                                  ],
+                         "intensity":  3,
+                         "season":  [
+                                        "spring",
+                                        "summer"
+                                    ],
+                         "image":  "parfumes_images/gucci-flora-gorgeous-gardenia.png"
+                     },
+                     {
+                         "id":  "prada-paradoxe",
+                         "brand":  "Prada",
+                         "name":  "Paradoxe",
+                         "year":  2022,
+                         "gender":  "women",
+                         "concentration":  "EDP",
+                         "families":  [
+                                          "floral",
+                                          "amber",
+                                          "woody"
+                                      ],
+                         "notes":  [
+                                       "neroli",
+                                       "bourbon vanilla",
+                                       "amber",
+                                       "white musk",
+                                       "moss"
+                                   ],
+                         "vibe":  [
+                                      "elegant",
+                                      "warm",
+                                      "day",
+                                      "evening"
+                                  ],
+                         "intensity":  3,
+                         "season":  [
+                                        "spring",
+                                        "summer",
+                                        "fall",
+                                        "winter"
+                                    ],
+                         "image":  "parfumes_images/prada-paradoxe.png"
+                     }
+                 ]
+}
